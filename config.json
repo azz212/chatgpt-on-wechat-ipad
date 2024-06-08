@@ -1,0 +1,79 @@
+{
+  "channel_type": "wx",
+  "model": "gpt-4o",
+  "open_ai_api_key": "Wicd9630",
+  "open_ai_api_base": "http://cozeproxy.hdgame.top/v1",
+  "open_ai_api_base2": "https://cdp.aytsao.cn/v1",
+  "open_ai_api_key2": "sk-deanxv-cdp",
+
+  "claude_api_key": "YOUR API KEY",
+  "text_to_image": "dall-e-3",
+  "voice_to_text": "openai",
+  "text_to_voice": "openai",
+  "proxy": "",
+  "hot_reload": false,
+  "wechatipad_port": 6711,
+
+  "single_chat_prefix": [
+    "",
+    "@bot"
+  ],
+  "single_chat_reply_prefix": "[bot] ",
+  "group_chat_prefix": [
+    ">"
+  ],
+  "group_name_white_list": [
+    "个人群",
+    "机器人总动员",
+    "wxbot",
+    "NGCBot交流群11",
+    "JavaScript学习笔记分享",
+    "chatgpt",
+    "XYBot交流群",
+    "\uD83E\uDD16 机器人大战"
+  ],
+  "image_create_prefix": [
+    "画"
+  ],
+  "speech_recognition": true,
+  "group_speech_recognition": false,
+  "voice_reply_voice": false,
+  "conversation_max_tokens": 5000,
+  "expires_in_seconds": 60,
+  "character_desc": "",
+  "temperature": 0.7,
+  "subscribe_msg": "感谢您的关注！\n这里是AI智能助手，可以自由对话。\n支持语音对话。\n支持图片输入。\n支持图片输出，画字开头的消息将按要求创作图片。\n支持tool、角色扮演和文字冒险等丰富的插件。\n输入{trigger_prefix}#help 查看详细指令。",
+  "use_linkai": false,
+  "linkai_api_key": "",
+  "linkai_app_code": "",
+
+  "wechatcom_corp_id": "ww590aa0af95637b5b",
+  "wechatcomapp_token": "XtILgOfeDd0n",
+  "wechatcomapp_port": 5712,
+  "wechatcomapp_secret": "cUXx60ftHcaRViqwTLSMsq69BS_JEW1PtS2oGDX763k",
+  "wechatcomapp_agent_id": "1000002",
+  "wechatcomapp_aes_key": "eX0c7lpxaMXso7UdC4CVTAIRRCgEdM0DegEmpEutg2e",
+
+  "feishu_port": 5711,
+  "feishu_app_id": "234212313",
+  "feishu_app_secret": "eX0c7lpxaMXso7UdC4CVTAIRRCgEdM0DegEmpEutg2e",
+  "feishu_token": "cUXx60ftHcaRViqwTLSMsq69BS_JEW1PtS2oGDX763k",
+  "feishu_bot_name": "test334",
+  "debug": true,
+
+  "baidu_wenxin_model": "ernie-speed-128k",
+  "baidu_wenxin_api_key": "a8SCuSa0i74lAsRmJj6qhtyI",
+  "baidu_wenxin_secret_key": "ccAys30jBeBLCXJmH4uaGu42x1loiqHw",
+
+  "xunfei_app_id": "430c3782",
+  "xunfei_api_key": "763525e8ab3ec6986f37b9bcb564c86f",
+  "xunfei_api_secret": "MGVlODM5NDlmMDQxZTI5M2YyYjJlNThl",
+  "base_url": " http://203.3.115.223:22277/api",
+  "auth_account": "17612873959",
+  "auth_password": "b7b8d32aaa229d3393ca9a831dcdccfbbef4818f36e0f26922786019d31d8095",
+
+  "token": "bf782400-381b-4731-9dee-44f2129158d3",
+  "auth": "eyJpdiI6IjZtd2lheTUwelBKU0l3RC9DMEtRK1E9PSIsInZhbHVlIjoiTVZZUGF0UXJQcGJBMENpVUh6YmdiQT09IiwibWFjIjoiMjQ4NjFiMDg5OWIzNmE3ZTdhYWU5NWJmOTE1NmIwZjk1N2IwN2VkYmE5N2ExNzk2ZTljYWFkNzlhNThhZmM4OSIsInRhZyI6IiJ9",
+  "test":1,
+  "http_hook":"http://cozeproxy.hdgame.top:8080/chat"
+}
