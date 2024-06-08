@@ -9,7 +9,7 @@ import json
 import os
 import threading
 import time
-import web
+
 import requests
 
 from bridge.context import *

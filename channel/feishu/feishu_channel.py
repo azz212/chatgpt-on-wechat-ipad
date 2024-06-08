@@ -9,7 +9,7 @@
 import uuid
 
 import requests
-import web
+
 from channel.feishu.feishu_message import FeishuMessage
 from bridge.context import Context
 from bridge.reply import Reply, ReplyType
