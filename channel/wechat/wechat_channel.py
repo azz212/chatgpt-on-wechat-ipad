@@ -156,25 +156,25 @@ class WechatChannel(ChatChannel):
     #        msg: ChatMessage消息对象
     #        origin_ctype: 原始消息类型，语音转文字后，私聊时如果匹配前缀失败，会根据初始消息是否是语音来放宽触发规则
     #        desire_rtype: 希望回复类型，默认是文本回复，设置为ReplyType.VOICE是语音回复
-    def handle_single(self, cmsg: ChatMessage):
-        # filter system message
-        if cmsg.other_user_id in ["weixin"]:
-            return
-        if cmsg.ctype == ContextType.VOICE:
-            if conf().get("speech_recognition") != True:
-                return
-            logger.debug("[WX]receive voice msg: {}".format(cmsg.content))
-        elif cmsg.ctype == ContextType.IMAGE:
-            logger.debug("[WX]receive image msg: {}".format(cmsg.content))
-        elif cmsg.ctype == ContextType.PATPAT:
-            logger.debug("[WX]receive patpat msg: {}".format(cmsg.content))
-        elif cmsg.ctype == ContextType.TEXT:
-            logger.debug("[WX]receive text msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
-        else:
-            logger.debug("[WX]receive msg: {}, cmsg={}".format(cmsg.content, cmsg))
-        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=False, msg=cmsg)
-        if context:
-            self.produce(context)
+    # def handle_single(self, cmsg: ChatMessage):
+    #     # filter system message
+    #     if cmsg.other_user_id in ["weixin"]:
+    #         return
+    #     if cmsg.ctype == ContextType.VOICE:
+    #         if conf().get("speech_recognition") != True:
+    #             return
+    #         logger.debug("[WX]receive voice msg: {}".format(cmsg.content))
+    #     elif cmsg.ctype == ContextType.IMAGE:
+    #         logger.debug("[WX]receive image msg: {}".format(cmsg.content))
+    #     elif cmsg.ctype == ContextType.PATPAT:
+    #         logger.debug("[WX]receive patpat msg: {}".format(cmsg.content))
+    #     elif cmsg.ctype == ContextType.TEXT:
+    #         logger.debug("[WX]receive text msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
+    #     else:
+    #         logger.debug("[WX]receive msg: {}, cmsg={}".format(cmsg.content, cmsg))
+    #     context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=False, msg=cmsg)
+    #     if context:
+    #         self.produce(context)
     def handle_group(self, cmsg: ChatMessage):
         #if cmsg.is_at and self.user_id in cmsg.at_list:
         if cmsg.ctype == ContextType.VOICE:
@@ -186,13 +186,13 @@ class WechatChannel(ChatChannel):
         elif cmsg.ctype in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.ACCEPT_FRIEND, ContextType.EXIT_GROUP]:
             logger.debug("[WX]receive note msg: {}".format(cmsg.content))
         elif cmsg.ctype == ContextType.TEXT:
-            logger.debug("[WX]receive group msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
+            logger.debug("[WX]receive msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
             pass
         elif cmsg.ctype == ContextType.FILE:
             logger.debug(f"[WX]receive attachment msg, file_name={cmsg.content}")
         else:
-            logger.debug("[WX]receive group msg: {}".format(cmsg.content))
-        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=True, msg=cmsg)
+            logger.debug("[WX]receive msg: {}".format(cmsg.content))
+        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg)
         if context:
             self.produce(context)
     def upload_pic(self,local_file,upload_url):
@@ -431,29 +431,30 @@ class WechatPadChannel:
     def GET(self):
         return "Wechat iPad service start success!"
 
-    def POST(self):
-        '''
-        todo 校验发过来的token和auth
-        '''
-        try:
-            msg = json.loads(web.data().decode("utf-8"))
-            logger.debug(f"[Wechat] receive request: {msg}")
-        except Exception as e:
-            logger.error(e)
-            return self.FAILED_MSG
-        try:
-            cmsg = WechatMessage(msg, True)
-        except NotImplementedError as e:
-            logger.debug("[WX]group message {} skipped: {}".format(msg["msg_id"], e))
-            return None
-        if msg['group']:
-            WechatChannel().handle_group(cmsg)
-        else:
-            WechatChannel().handle_single(cmsg)
-        return None
+    # def POST(self):
+    #     '''
+    #     todo 校验发过来的token和auth
+    #     '''
+    #     try:
+    #         msg = json.loads(web.data().decode("utf-8"))
+    #         logger.debug(f"[Wechat] receive request: {msg}")
+    #     except Exception as e:
+    #         logger.error(e)
+    #         return self.FAILED_MSG
+    #     try:
+    #         cmsg = WechatMessage(msg, True)
+    #     except NotImplementedError as e:
+    #         logger.debug("[WX]group message {} skipped: {}".format(msg["msg_id"], e))
+    #         return None
+    #     if msg['group']:
+    #         WechatChannel().handle_group(cmsg)
+    #     else:
+    #         WechatChannel().handle_single(cmsg)
+    #     return None
 
 async def message_handler(recv, channel):
-    await asyncio.create_task(channel.handle_group(recv))
+    channel.handle_group(recv)
+    #await asyncio.create_task(channel.handle_group(recv))
 
 
 # def callback(worker):

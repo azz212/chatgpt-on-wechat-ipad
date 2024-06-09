@@ -134,6 +134,6 @@ if __name__ == "__main__":
     
     '''
     port = conf().get("wechatipad_port", 5711)
-    quart_app.run("127.0.0.1", port, use_reloader=False,debug=True)
+    quart_app.run("0.0.0.0", port, use_reloader=False,debug=True)
 
 

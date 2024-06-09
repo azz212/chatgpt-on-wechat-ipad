@@ -181,7 +181,7 @@ class WechatChannel(ChatChannel):
             logger.debug("[WX]receive text msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
         else:
             logger.debug("[WX]receive msg: {}, cmsg={}".format(cmsg.content, cmsg))
-        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=False, msg=cmsg)
+        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg)
         if context:
             self.produce(context)
 
@@ -203,7 +203,7 @@ class WechatChannel(ChatChannel):
         elif cmsg.ctype == ContextType.FILE:
             logger.debug(f"[WX]receive attachment msg, file_name={cmsg.content}")
         else:
-            logger.debug("[WX]receive group msg: {}".format(cmsg.content))
+            logger.debug("[WX]receive msg: {}".format(cmsg.content))
         context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=True, msg=cmsg)
         if context:
             self.produce(context)

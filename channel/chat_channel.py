@@ -56,7 +56,7 @@ class ChatChannel(Channel):
             user_data = conf().get_user_data(cmsg.from_user_id)
             context["openai_api_key"] = user_data.get("openai_api_key")
             context["gpt_model"] = user_data.get("gpt_model")
-            if context.get("is_group", False):
+            if context.get("isgroup", False):
                 group_name = cmsg.other_user_nickname
                 group_id = cmsg.other_user_id
 
@@ -102,7 +102,7 @@ class ChatChannel(Channel):
                 return None
 
             nick_name_black_list = conf().get("nick_name_black_list", [])
-            if context.get("is_group", False):  # 群聊
+            if context.get("isgroup", False):  # 群聊
                 # 校验关键字
                 match_prefix = check_prefix(content, conf().get("group_chat_prefix"))
                 match_contain = check_contain(content, conf().get("group_chat_keyword"))
@@ -155,8 +155,13 @@ class ChatChannel(Channel):
                     return None
 
                 match_prefix = check_prefix(content, conf().get("single_chat_prefix", [""]))
-                if match_prefix is not None:  # 判断如果匹配到自定义前缀，则返回过滤掉前缀+空格后的内容
-                    content = content.replace(match_prefix, "", 1).strip()
+                if match_prefix is not None :  # 判断如果匹配到自定义前缀，则返回过滤掉前缀+空格后的内容,如果是GODCMD 以#开头，则直接跳过
+                    if not context.content.startswith("#"):
+                        content = content.replace(match_prefix, "", 1).strip()
+                    elif context.content.startswith("#"):
+                        logger.debug("[WX] receive GODCMD: {}".format(context.content))
+                        pass
+
                 elif context["origin_ctype"] == ContextType.VOICE:  # 如果源消息是私聊的语音消息，允许不匹配前缀，放宽条件
                     pass
                 else:
@@ -268,7 +273,7 @@ class ChatChannel(Channel):
                     if desire_rtype == ReplyType.VOICE and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
                         reply = super().build_text_to_voice(reply.content)
                         return self._decorate_reply(context, reply)
-                    if context.get("is_group", False):
+                    if context.get("isgroup", False):
                         if not context.get("no_need_at", False):
                             reply_text = "@" + context["msg"].actual_user_nickname + "\n" + reply_text.strip()
                         reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get("group_chat_reply_suffix", "")
@@ -282,7 +287,7 @@ class ChatChannel(Channel):
                     if reply.type == ReplyType.IMAGE_URL:
                         reply_text = reply.ext
                         if reply_text:
-                            if context.get("is_group", False):
+                            if context.get("isgroup", False):
                                 if not context.get("no_need_at", False):
                                     reply_text = "@" + context["msg"].actual_user_nickname + "\n你的提示词为:" + reply_text.strip()
                                 reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get(
