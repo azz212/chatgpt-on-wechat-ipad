@@ -68,7 +68,8 @@ def run():
     except Exception as e:
         logger.error("App startup failed!")
         logger.exception(e)
-
+run()
+port = conf().get("wechatipad_port", 5711)
 
 if __name__ == "__main__":
     '''
@@ -82,8 +83,7 @@ if __name__ == "__main__":
     todo 8 部署到香港服务器
     
     '''
-    run()
-    port = conf().get("wechatipad_port", 5711)
+
     quart_app.run("0.0.0.0", port, use_reloader=False)
 
 
