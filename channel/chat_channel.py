@@ -56,7 +56,7 @@ class ChatChannel(Channel):
             user_data = conf().get_user_data(cmsg.from_user_id)
             context["openai_api_key"] = user_data.get("openai_api_key")
             context["gpt_model"] = user_data.get("gpt_model")
-            if context.get("isgroup", False):
+            if context.get("is_group", False):
                 group_name = cmsg.other_user_nickname
                 group_id = cmsg.other_user_id
 
@@ -102,7 +102,7 @@ class ChatChannel(Channel):
                 return None
 
             nick_name_black_list = conf().get("nick_name_black_list", [])
-            if context.get("isgroup", False):  # 群聊
+            if context.get("is_group", False):  # 群聊
                 # 校验关键字
                 match_prefix = check_prefix(content, conf().get("group_chat_prefix"))
                 match_contain = check_contain(content, conf().get("group_chat_keyword"))
@@ -268,7 +268,7 @@ class ChatChannel(Channel):
                     if desire_rtype == ReplyType.VOICE and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
                         reply = super().build_text_to_voice(reply.content)
                         return self._decorate_reply(context, reply)
-                    if context.get("isgroup", False):
+                    if context.get("is_group", False):
                         if not context.get("no_need_at", False):
                             reply_text = "@" + context["msg"].actual_user_nickname + "\n" + reply_text.strip()
                         reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get("group_chat_reply_suffix", "")
@@ -282,7 +282,7 @@ class ChatChannel(Channel):
                     if reply.type == ReplyType.IMAGE_URL:
                         reply_text = reply.ext
                         if reply_text:
-                            if context.get("isgroup", False):
+                            if context.get("is_group", False):
                                 if not context.get("no_need_at", False):
                                     reply_text = "@" + context["msg"].actual_user_nickname + "\n你的提示词为:" + reply_text.strip()
                                 reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get(

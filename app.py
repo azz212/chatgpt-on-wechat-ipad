@@ -11,8 +11,15 @@ from config import load_config
 from plugins import *
 import threading
 from quart import Quart, request, jsonify,render_template,send_file
+import concurrent.futures
+import asyncio
+from channel.wechat.wechat_message import *
+from channel.wechat.wechat_channel import message_handler,WechatChannel
+
+from quart import Quart, request, Response
 
 quart_app = Quart(__name__)
+max_worker = 5
 
 
 def sigterm_handler_wrap(_signo):
@@ -44,6 +51,7 @@ def start_channel(channel_name: str):
 
 
 def run():
+
     try:
         # load config
         load_config()
@@ -69,8 +77,50 @@ def run():
         logger.error("App startup failed!")
         logger.exception(e)
 run()
-port = conf().get("wechatipad_port", 5711)
 
+@quart_app.route("/chat", methods=["POST"])
+async def chat():
+    # 类常量
+    FAILED_MSG = '{"success": false}'
+    SUCCESS_MSG = '{"success": true}'
+    MESSAGE_RECEIVE_TYPE = "8001"
+
+    ch = WechatChannel()
+    try:
+        try:
+            msg = await request.get_json()
+            logger.debug(f"[Wechat] receive request: {msg}")
+        except Exception as e:
+            logger.error(e)
+            return FAILED_MSG
+
+
+        try:
+            cmsg = WechatMessage(msg, True)
+        except NotImplementedError as e:
+            logger.debug("[WX]group message {} skipped: {}".format(msg["msg_id"], e))
+            return None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_worker):
+            asyncio.create_task(
+                #.handle_group(cmsg)
+                message_handler(cmsg, ch)
+            ).add_done_callback(callback)
+
+
+        # return a response
+        return Response("Message received", mimetype='text/plain')
+
+    except Exception as error:
+        logger.error(f"An error occurred: {error}")
+        return Response(str(error), mimetype='text/plain')
+
+@quart_app.route('/pic/<path:filename>')
+async def serve_pic(filename):
+    return await send_file(f'pic/{filename}')
+def callback(worker):
+    worker_exception = worker.exception()
+    if worker_exception:
+        logger.error(worker_exception)
 if __name__ == "__main__":
     '''
     todo 1 将web框架修改为flask 或者Quart OK
@@ -83,7 +133,7 @@ if __name__ == "__main__":
     todo 8 部署到香港服务器
     
     '''
-
-    quart_app.run("0.0.0.0", port, use_reloader=False)
+    port = conf().get("wechatipad_port", 5711)
+    quart_app.run("127.0.0.1", port, use_reloader=False,debug=True)
 
 

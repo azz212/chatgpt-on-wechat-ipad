@@ -35,8 +35,8 @@ import random
 import concurrent.futures
 import asyncio
 
-from app import quart_app
-max_worker = 5
+#from app import quart_app
+#max_worker = 5
 
 #
 # app = Flask(__name__)
@@ -417,11 +417,11 @@ class WechatChannel(ChatChannel):
                 video_storage.write(block)
             logger.info(f"[WX] download video success, size={size}, video_url={video_url}")
             video_storage.seek(0)
-            itchat.send_video(video_storage, toUserName=receiver)
+            #itchat.send_video(video_storage, toUserName=receiver)
             logger.info("[WX] sendVideo url={}, receiver={}".format(video_url, receiver))
 
 
-ch = WechatChannel()
+#ch = WechatChannel()
 class WechatPadChannel:
     # 类常量
     FAILED_MSG = '{"success": false}'
@@ -456,47 +456,10 @@ async def message_handler(recv, channel):
     await asyncio.create_task(channel.handle_group(recv))
 
 
-def callback(worker):
-    worker_exception = worker.exception()
-    if worker_exception:
-        logger.error(worker_exception)
-@quart_app.route("/chat", methods=["POST"])
-async def chat():
-    # 类常量
-    FAILED_MSG = '{"success": false}'
-    SUCCESS_MSG = '{"success": true}'
-    MESSAGE_RECEIVE_TYPE = "8001"
-    try:
-        try:
-            msg = await request.get_json()
-            logger.debug(f"[Wechat] receive request: {msg}")
-        except Exception as e:
-            logger.error(e)
-            return FAILED_MSG
-
-
-        try:
-            cmsg = WechatMessage(msg, True)
-        except NotImplementedError as e:
-            logger.debug("[WX]group message {} skipped: {}".format(msg["msg_id"], e))
-            return None
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_worker):
-            asyncio.create_task(
-                #.handle_group(cmsg)
-                message_handler(cmsg, ch)
-            ).add_done_callback(callback)
-
-
-        # return a response
-        return Response("Message received", mimetype='text/plain')
-
-    except Exception as error:
-        logger.error(f"An error occurred: {error}")
-        return Response(str(error), mimetype='text/plain')
-
-@quart_app.route('/pic/<path:filename>')
-async def serve_pic(filename):
-    return await send_file(f'pic/{filename}')
+# def callback(worker):
+#     worker_exception = worker.exception()
+#     if worker_exception:
+#         logger.error(worker_exception)
 
 #
 # wechat_pad_channel = WechatPadChannel()
