@@ -36,7 +36,6 @@ import concurrent.futures
 import asyncio
 
 max_worker = 5
-quart_app = Quart(__name__)
 
 #
 # app = Flask(__name__)
@@ -115,7 +114,7 @@ class WechatChannel(ChatChannel):
         self.init_load()
 
 
-        quart_app.run("0.0.0.0", port, use_reloader=False)
+        #quart_app.run("0.0.0.0", port, use_reloader=False)
 
         # urls = (
         #     '/chat', 'channel.wechat.wechat_channel.WechatPadChannel'

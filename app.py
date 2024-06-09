@@ -10,6 +10,9 @@ from common import const
 from config import load_config
 from plugins import *
 import threading
+from quart import Quart, request, jsonify,render_template,send_file
+
+quart_app = Quart(__name__)
 
 
 def sigterm_handler_wrap(_signo):
