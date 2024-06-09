@@ -35,6 +35,7 @@ import random
 import concurrent.futures
 import asyncio
 
+from app import quart_app
 max_worker = 5
 
 #
@@ -113,8 +114,8 @@ class WechatChannel(ChatChannel):
         port = conf().get("wechatipad_port", 5711)
         self.init_load()
 
-
         #quart_app.run("0.0.0.0", port, use_reloader=False)
+
 
         # urls = (
         #     '/chat', 'channel.wechat.wechat_channel.WechatPadChannel'

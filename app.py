@@ -63,8 +63,8 @@ def run():
 
         start_channel(channel_name)
 
-        while True:
-            time.sleep(1)
+        #while True:
+        #    time.sleep(1)
     except Exception as e:
         logger.error("App startup failed!")
         logger.exception(e)
@@ -83,3 +83,7 @@ if __name__ == "__main__":
     
     '''
     run()
+    port = conf().get("wechatipad_port", 5711)
+    quart_app.run("0.0.0.0", port, use_reloader=False)
+
+
