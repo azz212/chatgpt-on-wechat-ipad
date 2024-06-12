@@ -40,6 +40,23 @@ class ChatChannel(Channel):
         return res[0] if res else None  # 如果找到了就返回找到的元素（因为 filter 返回的是列表，所以我们取第一个元素），否则返回 None
     # 根据消息构造context，消息内容相关的触发项写在这里
     def _compose_context(self, ctype: ContextType, content, **kwargs):
+        '''
+        构建消息上下文的函数。
+
+        参数:
+        ctype: 上下文类型，例如文本或语音。
+        content: 消息内容。
+        **kwargs: 其他关键字参数。
+
+        函数在以下情况下返回None:
+        - 当群组名称不在白名单中。
+        - 当消息是引用消息时。
+        - 当消息来自黑名单中的昵称。
+        - 当私聊消息没有匹配到自定义前缀，并且不是语音消息。
+        - 当群聊消息没有匹配到关键字或前缀。
+        - 当消息是机器人自己发送的，并且不允许触发自身消息。
+        - 当插件处理了消息事件，并且决定传递（is_pass为True）。
+        '''
         context = Context(ctype, content)
         context.kwargs = kwargs
         # context首次传入时，origin_ctype是None,
@@ -88,8 +105,11 @@ class ChatChannel(Channel):
                 context["receiver"] = cmsg.other_user_id
             e_context = PluginManager().emit_event(EventContext(Event.ON_RECEIVE_MESSAGE, {"channel": self, "context": context}))
             context = e_context["context"]
+            # 如果插件处理了事件，并且决定传递，或者context为None，返回context
             if e_context.is_pass() or context is None:
                 return context
+            # 如果消息来自机器人自己，并且不允许触发自身消息，返回None
+
             if cmsg.from_user_id == self.user_id and not config.get("trigger_by_self", True):
                 logger.debug("[WX]self message skipped")
                 return None
@@ -167,6 +187,7 @@ class ChatChannel(Channel):
                 else:
                     return None
             content = content.strip()
+            #是否是画画命令
             img_match_prefix = check_prefix(content, conf().get("image_create_prefix"))
             if img_match_prefix:
                 content = content.replace(img_match_prefix, "", 1)

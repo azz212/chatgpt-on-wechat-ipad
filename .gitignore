@@ -17,6 +17,7 @@ itchat.pkl
 user_datas.pkl
 chatgpt_tool_hub/
 plugins/**/
+!plugins/Apilot
 !plugins/bdunit
 !plugins/dungeon
 !plugins/finish
@@ -24,12 +25,14 @@ plugins/**/
 !plugins/tool
 !plugins/banwords
 !plugins/banwords/**/
-plugins/banwords/__pycache__
-plugins/banwords/lib/__pycache__
 !plugins/hello
 !plugins/role
 !plugins/keyword
 !plugins/linkai
 !plugins/KFCwenan
-!plugins/Apilot
+
+plugins/banwords/__pycache__
+plugins/banwords/lib/__pycache__
+
 client_config.json
+/contact.json
