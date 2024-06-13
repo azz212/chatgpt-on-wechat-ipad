@@ -68,7 +68,7 @@ class WechatChannel(ChatChannel):
                                                                                         bot_info['data'][
 
                                                                                            'expiry_date']))
-        update_group = False
+        update_group = True
         if update_group:
             groups = self.bot.get_room_list()
             # 查询新的群列表，，检查群是否加载完整，并将群加入到监听列表中。，做多10个群，
@@ -106,7 +106,7 @@ class WechatChannel(ChatChannel):
 
                 #self.bot.filter_msg()
                 payload = {"group": group_need_monitors}
-                #self.bot.group_listen(payload=payload)
+                self.bot.group_listen(payload=payload)
 
     def startup(self):
 
