@@ -23,6 +23,7 @@ class OpenAIImage(object):
         '''
         将画图的提示词和图片URL返回
         '''
+        prompt=""
         try:
             if conf().get("rate_limit_dalle") and not self.tb4dalle.get_token():
                 return False, "请求太快了，请休息一下再问我吧"
@@ -46,7 +47,7 @@ class OpenAIImage(object):
                 else :
                     return True, image_url,prompt
             else:
-                return False, image_url
+                return False, image_url,prompt
         except openai.error.RateLimitError as e:
             logger.warn(e)
             if retry_count < 1:
@@ -54,7 +55,7 @@ class OpenAIImage(object):
                 logger.warn("[OPEN_AI] ImgCreate RateLimit exceed, 第{}次重试".format(retry_count + 1))
                 return self.create_img(query, retry_count + 1)
             else:
-                return False, "画图出现问题，请休息一下再问我吧"
+                return False, "画图出现问题，请休息一下再问我吧",prompt
         except Exception as e:
             logger.exception(e)
-            return False, "画图出现问题，请休息一下再问我吧"
+            return False, "画图出现问题，请休息一下再问我吧",prompt
