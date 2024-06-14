@@ -225,10 +225,35 @@ class WechatChannel(ChatChannel):
 
     # 统一的发送函数，每个Channel自行实现，根据reply的type字段发送不同类型的消息
     def send(self, reply: Reply, context: Context):
+        def send_long_text(bot, receiver, reply):
+            max_length = 1000
+            if reply.type == ReplyType.TEXT:
+                content = reply.content
+                if len(content)>max_length:
+                    segments = content.split('\n')
+                    current_message = ""
+                    for segment in segments:
+                        total_length = len(current_message) + len(segment) + 1
+                        if total_length <= max_length:  # +1 for the newline character
+                            if current_message:
+                                current_message += '\n' + segment
+                            else:
+                                current_message = segment
+                        else:
+                            bot.send_message(to_id=receiver, text=current_message)
+                            logger.info("[WX] sendMsg={}, receiver={}".format(current_message, receiver))
+                            current_message = segment
+                else:
+                    current_message = content
+                if current_message:
+                    bot.send_message(to_id=receiver, text=current_message)
+                    logger.info("[WX] sendMsg={}, receiver={}".format(current_message, receiver))
+                    time.sleep(2.0)
         receiver = context["receiver"]
         if reply.type == ReplyType.TEXT:
-            self.bot.send_message(to_id=receiver,text=reply.content)
-            logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
+            send_long_text(self.bot,receiver,reply)
+            #self.bot.send_message(to_id=receiver,text=reply.content)
+            #logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
         elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
             self.bot.send_message(to_id=receiver,text=reply.content)
             logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
