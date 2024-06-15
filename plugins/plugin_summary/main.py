@@ -131,8 +131,14 @@ class Summary(Plugin):
         self.conn.commit()
     
     def _get_records(self, session_id,room_id, start_timestamp=0, limit=9999):
+
         c = self.conn.cursor()
-        c.execute("SELECT * FROM chat_records WHERE user_id=? and room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?", (session_id,room_id, start_timestamp, limit))
+        if session_id:
+            c.execute("SELECT * FROM chat_records WHERE user_id=? and room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?", (session_id,room_id, start_timestamp, limit))
+        else:
+            c.execute(
+                "SELECT * FROM chat_records WHERE  room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?",
+                ( room_id, start_timestamp, limit))
         return c.fetchall()
 
     def on_receive_message(self, e_context: EventContext):
@@ -142,8 +148,8 @@ class Summary(Plugin):
         room_id=cmsg.other_user_id
         session_id = cmsg.from_user_id
         user_id =cmsg.from_user_id
-        if conf().get('channel_type', 'wx') == 'wx' and cmsg.from_user_nickname is not None:
-            session_id = cmsg.from_user_nickname # itchat channel id会变动，只好用群名作为session id
+        if conf().get('channel_type', 'wx') == 'wx' and cmsg.from_user_id is not None:
+            session_id = cmsg.from_user_id # itchat channel id会变动，只好用群名作为session id
 
         if context.get("isgroup", False):
             username = cmsg.actual_user_nickname
@@ -194,17 +200,41 @@ class Summary(Plugin):
         for record in records[::-1]:
             username = record[2]
             content = record[3]
-            is_triggered = record[6]
+            times = record[5]
+            is_triggered = record[8]
             if record[4] in [str(ContextType.IMAGE),str(ContextType.VOICE)]:
                 content = f"[{record[4]}]"
             
             sentence = ""
-            sentence += f'{username}' + ": \"" + content + "\""
+
+            sentence += f'[{username}][{times}]' + ": \"" + content + "\"\n"
             if is_triggered:
                 sentence += " <T>"
             query += "\n\n"+sentence
         prompt = "你是一位群聊机器人，需要对聊天记录进行简明扼要的总结，用列表的形式输出。\n聊天记录格式：[x]是emoji表情或者是对图片和声音文件的说明，消息最后出现<T>表示消息触发了群聊机器人的回复，内容通常是提问，若带有特殊符号如#和$则是触发你无法感知的某个插件功能，聊天记录中不包含你对这类消息的回复，可降低这些消息的权重。请不要在回复中包含聊天记录格式中出现的符号。\n"
-        
+        prompt = '''    
+        总结群聊记录，群记录格式为[人物A][时间]:内容\n[人物B][时间]:内容\n
+        [x]是emoji表情或者是对图片和声音文件的说明，消息最后出现<T>表示消息触发了群聊机器人的回复，若带有特殊符号如#和$则是触发你无法感知的某个插件功能，
+        聊天记录中不包含你对这类消息的回复，可降低这些消息的权重。请不要在回复中包含聊天记录格式中出现的符号，要求控制输出的文字少于1000字，话题不要超过4个，超过的部分在其他中简略提及
+        主要话题：
+        1. 请列出群里讨论的主要话题。
+        主要观点：
+        - 针对每个主要话题，请总结每个人的主要观点。
+            - 人物A：人物A在每个主要话题中的核心观点是什么？
+            - 人物B：人物B在每个主要话题中的核心观点是什么？
+        ---
+        示例：
+        ```
+        总结群聊记录：
+        1. 话题一：社交媒体的影响
+            - 小明：认为社交媒体对人际关系有负面影响。
+            - 小红：提到社交媒体可以更好地促进信息传播。
+        2. 话题二：最新技术发展
+            - 小刚：认为人工智能将带来革命性的变化。
+            - 小李：关注区块链技术的发展和应用前景。
+        这样调整可以确保对聊天记录的总结更清楚，有条理，并且能捕捉到每个人的主要观点和讨论焦点。
+        '''
+
         firstmsg_id = records[0][1]
         session = self.bot.sessions.build_session(firstmsg_id, prompt)
 
@@ -271,7 +301,7 @@ class Summary(Plugin):
 
             if "总结" in clist[0]:
                 flag = False
-                if clist[0] == trigger_prefix+"总结":
+                if trigger_prefix+"总结" in clist[0]:
                     flag = True
                     if len(clist) > 1:
                         try:
@@ -280,7 +310,11 @@ class Summary(Plugin):
                         except Exception as e:
                             flag = False
                 if not flag:
-                    text = content.split(trigger_prefix,maxsplit=1)[1]
+                    if trigger_prefix =="":
+                        split_char = " "
+                    else:
+                        split_char =trigger_prefix
+                    text = content.split(split_char,maxsplit=1)[1]
                     try:
                         command_json = find_json(self._translate_text_to_commands(text))
                         command = json.loads(command_json)
@@ -307,6 +341,10 @@ class Summary(Plugin):
 
             msg:ChatMessage = e_context['context']['msg']
             session_id = msg.from_user_id
+            if clist[0]=="总结":
+                session_id = msg.from_user_id
+            elif clist[0]=="总结所有人":
+                session_id= ''
             room_id = msg.other_user_id
             #if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
             #    session_id = msg.from_user_nickname # itchat channel id会变动，只好用名字作为session id
