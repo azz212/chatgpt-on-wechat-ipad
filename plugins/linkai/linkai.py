@@ -44,7 +44,7 @@ class LinkAI(Plugin):
 
         context = e_context['context']
         if context.type not in [ContextType.TEXT, ContextType.IMAGE, ContextType.IMAGE_CREATE, ContextType.FILE,
-                                ContextType.SHARING]:
+                                ContextType.XML]:
             # filter content no need solve
             return
 
@@ -69,7 +69,7 @@ class LinkAI(Plugin):
             os.remove(file_path)
             return
 
-        if (context.type == ContextType.SHARING and self._is_summary_open(context)) or \
+        if (context.type == ContextType.XML and self._is_summary_open(context)) or \
                 (context.type == ContextType.TEXT and self._is_summary_open(context) and LinkSummary().check_url(context.content)):
             if not LinkSummary().check_url(context.content):
                 return

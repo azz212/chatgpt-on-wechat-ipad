@@ -190,6 +190,8 @@ class WechatChannel(ChatChannel):
             pass
         elif cmsg.ctype == ContextType.FILE:
             logger.debug(f"[WX]receive attachment msg, file_name={cmsg.content}")
+        elif cmsg.ctype == ContextType.XML:
+            logger.debug(f"[WX]receive XML msg")
         else:
             logger.debug("[WX]receive msg: {}".format(cmsg.content))
         context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg)

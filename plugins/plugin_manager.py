@@ -147,7 +147,7 @@ class PluginManager:
                 try:
                     instance = plugincls()
                 except Exception as e:
-                    logger.warn("Failed to init %s, diabled. %s" % (name, e))
+                    logger.warn("插件初始化失败！！ %s, diabled. %s" % (name, e))
                     self.disable_plugin(name)
                     failed_plugins.append(name)
                     continue
@@ -156,6 +156,8 @@ class PluginManager:
                     if event not in self.listening_plugins:
                         self.listening_plugins[event] = []
                     self.listening_plugins[event].append(name)
+            else:
+                logger.warn("插件 %s, 已被禁止." % (name))
         self.refresh_order()
         return failed_plugins
 
@@ -232,6 +234,7 @@ class PluginManager:
             self.plugins[name].enabled = False
             rawname = self.plugins[name].name
             self.pconf["plugins"][rawname]["enabled"] = False
+            logger.debug("Plugin %s 被禁止" %(rawname))
             self.save_config()
             return True
         return True

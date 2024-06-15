@@ -182,10 +182,12 @@ class ChatChannel(Channel):
                         logger.debug("[WX] receive GODCMD: {}".format(context.content))
                         pass
 
-                elif context["origin_ctype"] == ContextType.VOICE:  # 如果源消息是私聊的语音消息，允许不匹配前缀，放宽条件
+                elif context["origin_ctype"] in [ContextType.VOICE,ContextType.XML]:
+                    # 如果源消息是私聊的语音消息,XML，允许不匹配前缀，放宽条件
                     pass
                 else:
                     return None
+
             content = content.strip()
             #是否是画画命令
             img_match_prefix = check_prefix(content, conf().get("image_create_prefix"))
@@ -200,6 +202,8 @@ class ChatChannel(Channel):
         elif context.type == ContextType.VOICE:
             if "desire_rtype" not in context and conf().get("voice_reply_voice") and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
                 context["desire_rtype"] = ReplyType.VOICE
+        elif context.type == ContextType.XML:
+            context["desire_rtype"] = ReplyType.TEXT
 
         return context
 
@@ -264,7 +268,7 @@ class ChatChannel(Channel):
                     "path": context.content,
                     "msg": context.get("msg")
                 }
-            elif context.type == ContextType.SHARING:  # 分享信息，当前无默认逻辑
+            elif context.type == ContextType.XML:  # 分享信息，当前无默认逻辑
                 pass
             elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
                 pass
@@ -382,7 +386,7 @@ class ChatChannel(Channel):
                     Dequeue(),
                     threading.BoundedSemaphore(conf().get("concurrency_in_session", 4)),
                 ]
-            if context.type == ContextType.TEXT and context.content.startswith("#"):
+            if context.type == ContextType.TEXT and context.content and context.content.startswith("#"):
                 self.sessions[session_id][0].putleft(context)  # 优先处理管理命令
             else:
                 self.sessions[session_id][0].put(context)

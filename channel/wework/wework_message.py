@@ -141,7 +141,7 @@ class WeworkMessage(ChatMessage):
                 self.content = os.path.join(current_dir, "tmp", file_name)
                 self._prepare_fn = lambda: cdn_download(wework, wework_msg, file_name)
             elif wework_msg["type"] == 11047:  # 链接消息
-                self.ctype = ContextType.SHARING
+                self.ctype = ContextType.XML
                 self.content = wework_msg['data']['url']
             elif wework_msg["type"] == 11072:  # 新成员入群通知
                 self.ctype = ContextType.JOIN_GROUP

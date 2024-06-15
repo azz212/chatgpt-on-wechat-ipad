@@ -9,7 +9,7 @@ class ContextType(Enum):
     IMAGE = 3  # 图片消息
     FILE = 4  # 文件信息
     VIDEO = 5  # 视频信息
-    SHARING = 6  # 分享信息
+    XML = 6  # 分享信息
     MAP = 9 #地图
     EMOJ = 7  # 表情
     CARD = 8  # 名片信息
