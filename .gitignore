@@ -29,6 +29,7 @@ chatgpt_tool_hub/
 !plugins/keyword
 !plugins/linkai
 !plugins/KFCwenan
+!plugins/plugin_summary
 
 plugins/banwords/__pycache__
 plugins/banwords/lib/__pycache__
