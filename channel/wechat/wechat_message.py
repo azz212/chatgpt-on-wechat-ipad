@@ -37,6 +37,7 @@ class WechatMessage(ChatMessage):
             #self._prepare_fn = lambda: itchat_msg.download(self.content)
         elif itchat_msg["type"] in ['8005', '9005']:#群聊红包、文件、链接、小程序等类型
             self.ctype = ContextType.XML
+            self.content = itchat_msg["msg"]
         elif itchat_msg["type"] in ['8006', '9006']:  # 群聊地图位置消息
             self.ctype = ContextType.MAP
         elif itchat_msg["type"] in ['8007', '9007']:#群聊表情包

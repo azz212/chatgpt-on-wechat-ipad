@@ -7,7 +7,7 @@ from channel.chat_message import ChatMessage
 from common.log import logger
 from plugins import *
 from config import conf
-
+from .downloadvideo import download_163news,upload_aliyun
 
 @plugins.register(
     name="neteasy",
@@ -31,10 +31,7 @@ class neteasy(Plugin):
             self.config = super().load_config()
             if not self.config:
                 self.config = self._load_config_template()
-            self.group_welc_fixed_msg = self.config.get("group_welc_fixed_msg", {})
-            self.group_welc_prompt = self.config.get("group_welc_prompt", self.group_welc_prompt)
-            self.group_exit_prompt = self.config.get("group_exit_prompt", self.group_exit_prompt)
-            self.patpat_prompt = self.config.get("patpat_prompt", self.patpat_prompt)
+
             logger.info("[neteasy] inited")
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
         except Exception as e:
@@ -52,13 +49,16 @@ class neteasy(Plugin):
 
         content = e_context["context"].content
         logger.debug("[neteasy] on_handle_context. content: %s" % content)
-        if  'appid="wx7be3c1bb46c68c63"' in content :
+        if  "wx7be3c1bb46c68c63" in content :
+            retcode, filename, filepath = download_163news(content)
+            ret = upload_aliyun(filepath, '网易视频')
+
             reply = Reply()
             reply.type = ReplyType.TEXT
-            if e_context["context"]["isgroup"]:
-                reply.content = f"neteasy, {msg.actual_user_nickname} from {msg.from_user_nickname}"
+            if ret:
+                reply.content = f"neteasy,视频上传完成: {filename} "
             else:
-                reply.content = f"neteasy, {msg.from_user_nickname}"
+                reply.content = f"neteasy,视频上传失败:, {filename}"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
@@ -70,7 +70,7 @@ class neteasy(Plugin):
         return help_text
 
     def _load_config_template(self):
-        logger.debug("No neteasy plugin config.json, use plugins/neteasy/config.json.template")
+        logger.debug("No neteasy plugin zhao_config.json, use plugins/neteasy/zhao_config.json.template")
         try:
             plugin_config_path = os.path.join(self.path, "config.json.template")
             if os.path.exists(plugin_config_path):
@@ -79,3 +79,6 @@ class neteasy(Plugin):
                     return plugin_conf
         except Exception as e:
             logger.exception(e)
+
+
+
