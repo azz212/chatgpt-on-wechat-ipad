@@ -134,10 +134,12 @@ class Summary(Plugin):
 
         c = self.conn.cursor()
         if session_id:
-            c.execute("SELECT * FROM chat_records WHERE user_id=? and room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?", (session_id,room_id, start_timestamp, limit))
+            sql = "SELECT * FROM chat_records WHERE user_id=? and room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?"
+            c.execute(sql, (session_id,room_id, start_timestamp, limit))
         else:
+            sql ="SELECT * FROM chat_records WHERE  room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?"
             c.execute(
-                "SELECT * FROM chat_records WHERE  room_id=? and timestamp>? ORDER BY timestamp DESC LIMIT ?",
+                sql,
                 ( room_id, start_timestamp, limit))
         return c.fetchall()
 
@@ -343,7 +345,7 @@ class Summary(Plugin):
             session_id = msg.from_user_id
             if clist[0]=="总结":
                 session_id = msg.from_user_id
-            elif clist[0]=="总结所有人":
+            elif "总结" in content and "所有人" in content:
                 session_id= ''
             room_id = msg.other_user_id
             #if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
