@@ -66,34 +66,34 @@ class Summary(Plugin):
                         PRIMARY KEY (sessionid, room_id))''')
 
             # 后期增加了is_triggered字段，这里做个过渡，这段代码某天会删除
-            c = c.execute("PRAGMA table_info(chat_records);")
-            column_exists = False
-
-            for column in c.fetchall():
-                logger.debug("[Summary] column: {}" .format(column))
-                if column[1] == 'user_id':
-                    column_exists = True
-                    break
-            if not column_exists:
-                #self.conn.execute("ALTER TABLE chat_records ADD COLUMN room_id TEXT DEFAULT '';")
-                #self.conn.execute("UPDATE chat_records SET room_id = '';")
-
-                self.conn.execute("ALTER TABLE chat_records ADD COLUMN user_id TEXT DEFAULT '';")
-                self.conn.execute("UPDATE chat_records SET user_id = '';")
-            self.conn.commit()
-
-            c = c.execute("PRAGMA table_info(chat_records);")
-            column_exists = False
-            for column in c.fetchall():
-                logger.debug("[Summary] column: {}".format(column))
-                if column[1] == 'room_id':
-                    column_exists = True
-                    break
-            if not column_exists:
-                self.conn.execute("ALTER TABLE chat_records ADD COLUMN room_id TEXT DEFAULT '';")
-                self.conn.execute("UPDATE chat_records SET room_id = '';")
-
-            self.conn.commit()
+            # c = c.execute("PRAGMA table_info(chat_records);")
+            # column_exists = False
+            #
+            # for column in c.fetchall():
+            #     logger.debug("[Summary] column: {}" .format(column))
+            #     if column[1] == 'user_id':
+            #         column_exists = True
+            #         break
+            # if not column_exists:
+            #     #self.conn.execute("ALTER TABLE chat_records ADD COLUMN room_id TEXT DEFAULT '';")
+            #     #self.conn.execute("UPDATE chat_records SET room_id = '';")
+            #
+            #     self.conn.execute("ALTER TABLE chat_records ADD COLUMN user_id TEXT DEFAULT '';")
+            #     self.conn.execute("UPDATE chat_records SET user_id = '';")
+            # self.conn.commit()
+            #
+            # c = c.execute("PRAGMA table_info(chat_records);")
+            # column_exists = False
+            # for column in c.fetchall():
+            #     logger.debug("[Summary] column: {}".format(column))
+            #     if column[1] == 'room_id':
+            #         column_exists = True
+            #         break
+            # if not column_exists:
+            #     self.conn.execute("ALTER TABLE chat_records ADD COLUMN room_id TEXT DEFAULT '';")
+            #     self.conn.execute("UPDATE chat_records SET room_id = '';")
+            #
+            # self.conn.commit()
 
             btype = Bridge().btype['chat']
             if btype not in [const.OPEN_AI, const.CHATGPT, const.CHATGPTONAZURE, const.LINKAI]:
