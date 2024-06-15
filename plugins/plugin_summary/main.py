@@ -308,8 +308,8 @@ class Summary(Plugin):
             msg:ChatMessage = e_context['context']['msg']
             session_id = msg.from_user_id
             room_id = msg.other_user_id
-            if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
-                session_id = msg.from_user_nickname # itchat channel id会变动，只好用名字作为session id
+            #if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
+            #    session_id = msg.from_user_nickname # itchat channel id会变动，只好用名字作为session id
             records = self._get_records(session_id,room_id, start_time, limit)
             for i in range(len(records)):
                 record=list(records[i])
