@@ -63,7 +63,7 @@ class Summary(Plugin):
             c = self.conn.cursor()
             c.execute('''CREATE TABLE IF NOT EXISTS chat_records
                         (sessionid TEXT, msgid INTEGER, user TEXT, content TEXT, type TEXT, timestamp INTEGER,user_id TEXT, room_id TEXT,is_triggered INTEGER,
-                        PRIMARY KEY (sessionid, room_id))''')
+                        PRIMARY KEY (msgid, user_id))''')
 
             # 后期增加了is_triggered字段，这里做个过渡，这段代码某天会删除
             # c = c.execute("PRAGMA table_info(chat_records);")
