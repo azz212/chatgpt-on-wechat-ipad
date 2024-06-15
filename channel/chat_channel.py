@@ -210,7 +210,10 @@ class ChatChannel(Channel):
     def _handle(self, context: Context):
         if context is None or not context.content:
             return
-        logger.debug("[WX] ready to handle context: {}".format(context))
+        if context.type!=ContextType.XML:
+            logger.debug("[WX] ready to handle context: {}".format(context))
+        else:
+            logger.debug("[WX] ready to handle context-XML")
         # reply的构建步骤
         reply = self._generate_reply(context)
 
@@ -401,7 +404,11 @@ class ChatChannel(Channel):
                     if semaphore.acquire(blocking=False):  # 等线程处理完毕才能删除
                         if not context_queue.empty():
                             context = context_queue.get()
-                            logger.debug("[WX] consume context: {}".format(context))
+                            if context.type != ContextType.XML:
+                                logger.debug("[WX] consume context: {}".format(context))
+                            else:
+                                logger.debug("[WX] consume context-XML")
+
                             future: Future = handler_pool.submit(self._handle, context)
                             future.add_done_callback(self._thread_pool_callback(session_id, context=context))
                             if session_id not in self.futures:

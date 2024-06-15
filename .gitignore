@@ -40,3 +40,5 @@ plugins/banwords/lib/__pycache__
 client_config.json
 /contact.json
 plugins/plugin_summary/chat.db
+/plugins/neteasy/video/
+/video/

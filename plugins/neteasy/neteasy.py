@@ -15,15 +15,12 @@ from .downloadvideo import download_163news,upload_aliyun
     hidden=True,
     desc="发送链接下载网易视频",
     version="0.1",
-    author="lanvent",
+    author="zhao",
 )
 
 
 class neteasy(Plugin):
 
-    group_welc_prompt = "请你随机使用一种风格说一句问候语来欢迎新用户\"{nickname}\"加入群聊。"
-    group_exit_prompt = "请你随机使用一种风格介绍你自己，并告诉用户输入#help可以查看帮助信息。"
-    patpat_prompt = "请你随机使用一种风格跟其他群用户说他违反规则\"{nickname}\"退出群聊。"
 
     def __init__(self):
         super().__init__()

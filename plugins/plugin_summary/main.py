@@ -144,8 +144,11 @@ class Summary(Plugin):
         return c.fetchall()
 
     def on_receive_message(self, e_context: EventContext):
+        if e_context['context']['msg'].ctype==ContextType.XML:
+            return
         context = e_context['context']
         cmsg : ChatMessage = e_context['context']['msg']
+
         username = None
         room_id=cmsg.other_user_id
         session_id = cmsg.from_user_id

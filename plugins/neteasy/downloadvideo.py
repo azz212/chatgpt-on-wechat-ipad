@@ -7,7 +7,7 @@ import os
 import re
 from aligo import Aligo,set_config_folder
 def login_ali():
-    set_config_folder('./')
+    set_config_folder('plugins/neteasy')
     ali = Aligo(name="zhao_config")  # 第一次使用，会弹出二维码，供扫描登录
 
     return ali
