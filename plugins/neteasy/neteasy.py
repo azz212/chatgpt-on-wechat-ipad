@@ -65,7 +65,7 @@ class neteasy(Plugin):
             url =self.get_xml_element(content,'url')
             #修改接收到的消息，将url提取后，继续让gpt处理
             if 'http://mp.weixin.qq.com/' in url:
-                e_context["context"].content="请提取URl的内容，总结这篇文章，URL是{}".format(url)
+                e_context["context"].content=">请提取URl的内容，总结这篇文章，URL是{}".format(url)
 
                 e_context.action = EventAction.CONTINUE  # 事件继续
 
