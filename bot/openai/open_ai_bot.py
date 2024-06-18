@@ -92,7 +92,7 @@ class OpenAIBot(Bot, OpenAIImage):
                         retstring = "{}://{}:{}/pic/{}".format(scheme, domain, port,file_name)
 
 
-                    reply = Reply(ReplyType.IMAGE_URL, retstring)
+                    reply = Reply(ReplyType.IMAGE_URL, prompt)
                 else:
                     reply = Reply(ReplyType.ERROR, retstring)
                 return reply
