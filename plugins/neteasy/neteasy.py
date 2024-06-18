@@ -1,4 +1,5 @@
 # encoding:utf-8
+import xml.etree.ElementTree as ET
 
 import plugins
 from bridge.context import ContextType
@@ -59,7 +60,14 @@ class neteasy(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
+        elif '' in content:
 
+            url =self.get_xml_element(content,'url')
+            #修改接收到的消息，将url提取后，继续让gpt处理
+            if 'http://mp.weixin.qq.com/' in url:
+                e_context["context"].content="请提取URl的内容，总结这篇文章，URL是{}".format(url)
+
+                e_context.action = EventAction.CONTINUE  # 事件继续
 
 
     def get_help_text(self, **kwargs):
@@ -76,6 +84,19 @@ class neteasy(Plugin):
                     return plugin_conf
         except Exception as e:
             logger.exception(e)
+
+    def get_xml_element(self,xml_data,tag):
+        value = ""
+        # 解析XML数据
+        root = ET.fromstring(xml_data)
+
+        # 获取<title>标签的文本内容
+        #title = root.find('.//title').text
+
+        # 获取<url>标签的文本内容
+        value = root.find('.//'+tag).text
+
+        return value
 
 
 
