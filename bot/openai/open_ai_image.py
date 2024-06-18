@@ -41,13 +41,18 @@ class OpenAIImage(object):
             image_url = response["data"][0]["url"]
             prompt = response["data"][0]["revised_prompt"]
             logger.info("[OPEN_AI] image_url={}, prompt = {}".format(image_url,prompt))
+            image_urls=[]
+            for data in response["data"]:
+                image_urls.append(data["url"])
+            image_urls.pop(0)
+            external={"prompt":prompt,"urls":image_urls}
             if image_url:
                 if 'ad.bluead.ai' in image_url:
-                    return False, "图片地址错误！",prompt
+                    return False, "图片地址错误！",external
                 else :
-                    return True, image_url,prompt
+                    return True, image_url,external
             else:
-                return False, image_url,prompt
+                return False, image_url,external
         except openai.error.RateLimitError as e:
             logger.warn(e)
             if retry_count < 1:

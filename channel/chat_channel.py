@@ -313,17 +313,17 @@ class ChatChannel(Channel):
                 elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.VOICE or reply.type == ReplyType.IMAGE or reply.type == ReplyType.FILE or reply.type == ReplyType.VIDEO or reply.type == ReplyType.VIDEO_URL:
                     #如果有ext信息，则在文字上加上@符号和昵称
                     if reply.type == ReplyType.IMAGE_URL:
-                        reply_text = reply.ext
+                        reply_text = reply.ext["prompt"]
                         if reply_text:
                             if context.get("isgroup", False):
                                 if not context.get("no_need_at", False):
-                                    reply_text = "@" + context["msg"].actual_user_nickname + "\n你的提示词为:" + reply_text.strip()
+                                    reply_text = "@" + context["msg"].actual_user_nickname + "\n" + reply_text.strip()
                                 reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get(
                                     "group_chat_reply_suffix", "")
                             else:
                                 reply_text = conf().get("single_chat_reply_prefix", "") + reply_text + conf().get(
                                     "single_chat_reply_suffix", "")
-                            reply.ext = reply_text
+                            reply.ext["prompt"] = reply_text
 
 
                 else:
