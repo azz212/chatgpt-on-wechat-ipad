@@ -268,7 +268,7 @@ class WechatChannel(ChatChannel):
             if reply.ext: #如果有ext 说明有文字要发送，一次发完，这个地方已经完成了ext信息的包装
 
                 self.bot.send_message(to_id=receiver,text=reply.ext["prompt"])
-                time.sleep(1.5)
+                #time.sleep(1.5)
 
 
             self.bot.send_image_url(to_id=receiver,url=reply.content)
@@ -276,7 +276,7 @@ class WechatChannel(ChatChannel):
             #time.sleep(2)
             if reply.ext:
                 for url in reply.ext["urls"]:
-                    time.sleep(2)
+                    #time.sleep(2)
                     self.bot.send_image_url(to_id=receiver, url=url)
                     logger.info("[WX] sendImage url={}, receiver={}".format(url, receiver))
 
