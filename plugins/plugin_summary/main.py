@@ -357,10 +357,11 @@ class Summary(Plugin):
             for i in range(len(records)):
                 record=list(records[i])
                 content = record[3]
-                clist = re.split(r'\n- - - - - - - - -.*?\n', content)
-                if len(clist) > 1:
-                    record[3] = clist[1]
-                    records[i] = tuple(record)
+                if content:
+                    clist = re.split(r'\n- - - - - - - - -.*?\n', content)
+                    if len(clist) > 1:
+                        record[3] = clist[1]
+                        records[i] = tuple(record)
             if len(records) <= 1:
                 reply = Reply(ReplyType.INFO, "无聊天记录可供总结")
                 e_context['reply'] = reply
