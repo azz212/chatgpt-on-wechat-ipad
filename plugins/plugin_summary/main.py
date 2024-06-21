@@ -205,11 +205,13 @@ class Summary(Plugin):
         for record in records[::-1]:
             username = record[2]
             content = record[3]
+            if not content:
+                continue
             times = record[5]
             is_triggered = record[8]
             if record[4] in [str(ContextType.IMAGE),str(ContextType.VOICE)]:
                 content = f"[{record[4]}]"
-            
+
             sentence = ""
 
             sentence += f'[{username}][{times}]' + ": \"" + content + "\"\n"
