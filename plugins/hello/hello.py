@@ -60,7 +60,7 @@ class Hello(Plugin):
                 else:
                     reply.content = conf().get("group_welcome_msg", "").replace("{nickname}",msg.actual_user_nickname)
                 e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+                e_context.action = EventAction.BREAK  # 事件结束，并跳过处理context的默认逻辑
                 return
             e_context["context"].type = ContextType.TEXT
             e_context["context"].content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
