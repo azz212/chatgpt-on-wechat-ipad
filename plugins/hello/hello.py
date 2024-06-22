@@ -56,9 +56,9 @@ class Hello(Plugin):
                 reply = Reply()
                 reply.type = ReplyType.TEXT
                 if group_name in self.group_welc_fixed_msg:
-                    reply.content = self.group_welc_fixed_msg.get(group_name, "").replace("{nickname}",msg.from_user_nickname)
+                    reply.content = self.group_welc_fixed_msg.get(group_name, "").replace("{nickname}",msg.actual_user_nickname)
                 else:
-                    reply.content = conf().get("group_welcome_msg", "").replace("{nickname}",msg.from_user_nickname)
+                    reply.content = conf().get("group_welcome_msg", "").replace("{nickname}",msg.actual_user_nickname)
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
                 return
