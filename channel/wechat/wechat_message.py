@@ -6,6 +6,10 @@ from common.log import logger
 from common.tmp_dir import TmpDir
 import json
 import os
+import xml.etree.ElementTree as ET
+
+
+
 #from lib import itchat
 #from lib.itchat.content import *
 
@@ -44,17 +48,25 @@ class WechatMessage(ChatMessage):
             self.ctype = ContextType.EMOJ
         elif itchat_msg["type"] in ['8008', '9008']:#群聊名片
             self.ctype = ContextType.CARD
-        elif itchat_msg["type"] ==  10000:
-            if is_group and ("加入群聊" in itchat_msg["msf"] or "加入了群聊" in itchat_msg["msg"]):
+        elif itchat_msg["type"] in ['7005']:
+            result = self.parse_wechat_message( itchat_msg["msg"])
+            if result['message_type'] =='sysmsgtemplate' and  result['sub_type'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
-                if "加入了群聊" in itchat_msg["msg"]:
-                    self.ctype = ContextType.JOIN_GROUP
-                    self.content = itchat_msg["msg"]
-                    self.actual_user_nickname = re.findall(r"\"(.*?)\"", itchat_msg["Content"])[-1]
-                elif "加入群聊" in itchat_msg["msg"]:
-                    self.ctype = ContextType.JOIN_GROUP
-                    self.content = itchat_msg["msg"]
-                    self.actual_user_nickname = re.findall(r"\"(.*?)\"", itchat_msg["Content"])[0]
+                self.ctype = ContextType.JOIN_GROUP
+                self.content = itchat_msg["msg"]
+                self.actual_user_nickname = result['joiners_usernames'][0]['nickname']
+                self.content= f"{result['inviter_username']['nickname']} 邀请 {self.actual_user_nickname } 加入了群聊!"
+
+            elif result['message_type'] =='pat':
+
+                self.ctype = ContextType.PATPAT
+
+                self.content = itchat_msg["msg"]
+
+                if is_group:
+                    self.actual_user_id = result['from_username']
+                    displayName, nickname = self.get_chatroom_nickname(self.room_id, self.actual_user_id)
+                    self.actual_user_nickname = displayName or nickname
 
             elif is_group and ("移出了群聊" in itchat_msg["msg"]):
                 self.ctype = ContextType.EXIT_GROUP
@@ -64,11 +76,7 @@ class WechatMessage(ChatMessage):
             elif "你已添加了" in itchat_msg["msg"]:  #通过好友请求
                 self.ctype = ContextType.ACCEPT_FRIEND
                 self.content = itchat_msg["msg"]
-            elif "拍了拍我" in itchat_msg["msg"]:
-                self.ctype = ContextType.PATPAT
-                self.content = itchat_msg["msg"]
-                if is_group:
-                    self.actual_user_nickname = re.findall(r"\"(.*?)\"", itchat_msg["Content"])[0]
+
             else:
                 raise NotImplementedError("Unsupported note message: " + itchat_msg["Content"])
         elif itchat_msg["type"] in ['8005','9005']:
@@ -124,7 +132,8 @@ class WechatMessage(ChatMessage):
             #self.at_list_member = self.bot.shared_wx_contact_list[self.room_id]['chatRoomMembers']
             self.actual_user_id = itchat_msg["from_id"]
             if self.ctype not in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.EXIT_GROUP]:
-                self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
+                pass
+                #self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
 
     def get_user(self,users, username):
         # 使用 filter 函数通过给定的 userName 来找寻符合条件的元素
@@ -166,6 +175,77 @@ class WechatMessage(ChatMessage):
 
             return  member_info['displayName'] , member_info['nickName']
         return None,None
+
+    def parse_wechat_message(self,xml_data):
+        def get_member_info(member_element):
+            if member_element is not None:
+                username = member_element.findtext('.//username').strip()
+                nickname = member_element.findtext('.//nickname').strip()
+                return {
+                    'username': username,
+                    'nickname': nickname
+                }
+            else:
+                return None
+
+        # 解析XML
+        root = ET.fromstring(xml_data)
+
+        # 获取消息类型
+        message_type = root.get('type')
+
+        # 根据消息类型提取信息
+        if message_type == 'pat':
+            # 拍一拍消息
+            from_username = root.find('.//fromusername').text if root.find('.//fromusername') is not None else None
+            template_content = root.find('.//template').text if root.find('.//template') is not None else None
+            return {
+                'message_type': message_type,
+                'from_username': from_username,
+                'action': template_content
+            }
+        elif message_type == 'sysmsgtemplate':
+            # 系统消息，可能是邀请或撤回
+            sub_type = root.find('./subtype').text if root.find('./subtype') is not None else None
+            sub_type = root.find('.//sysmsgtemplate/content_template[@type="tmpl_type_profile"]')
+            if sub_type:
+
+                # 获取邀请者信息
+                inviter_link = root.find('.//link_list/link[@name="username"]')
+                inviter = get_member_info(inviter_link.find('.//member') if inviter_link is not None else None)
+
+                # 获取加入群聊的成员信息
+                names_link = root.find('.//link_list/link[@name="names"]')
+                members = names_link.findall('.//memberlist/member') if names_link is not None else []
+                joiners = [get_member_info(member) for member in members if get_member_info(member)]
+
+                return {
+                    'message_type': message_type,
+                    'subtype': "invite",
+                    'inviter_username': inviter,
+                    'joiners_usernames': joiners
+                }
+            else:
+                return {'message_type': message_type, 'subtype': sub_type, 'info': '未知系统消息类型'}
+        elif message_type == 'revokemsg':
+            # 消息撤回
+            session = root.find('./session').text if root.find('./session') is not None else None
+            msgid = root.find('./revokemsg/msgid').text if root.find('./revokemsg/msgid') is not None else None
+            newmsgid = root.find('./revokemsg/newmsgid').text if root.find('./revokemsg/newmsgid') is not None else None
+            replacemsg = root.find('./revokemsg/replacemsg').text if root.find(
+                './revokemsg/replacemsg') is not None else None
+
+            # 返回撤回消息的字典
+            return {
+                'message_type': 'revokemsg',
+                'session': session,
+                'original_message_id': msgid,
+                'new_message_id': newmsgid,
+                'replace_message': replacemsg
+            }
+
+        else:
+            return {'message_type': message_type, 'info': '未知消息类型'}
 
     def load_contact(self):
         if os.path.exists("contact.json"):
