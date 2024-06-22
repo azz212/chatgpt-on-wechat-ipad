@@ -9,6 +9,9 @@ xml_data_invite = '''
 xml_data_invite2 ='''
 <sysmsg type="sysmsgtemplate">\n\t<sysmsgtemplate>\n\t\t<content_template type="tmpl_type_profile">\n\t\t\t<plain><![CDATA[]]></plain>\n\t\t\t<template><![CDATA["$username$"邀请"$names$"加入了群聊]]></template>\n\t\t\t<link_list>\n\t\t\t\t<link name="username" type="link_profile">\n\t\t\t\t\t<memberlist>\n\t\t\t\t\t\t<member>\n\t\t\t\t\t\t\t<username><![CDATA[wxid_gqhxp9ipfxv222]]></username>\n\t\t\t\t\t\t\t<nickname><![CDATA[🌙 周星星🌙(管理)]]></nickname>\n\t\t\t\t\t\t</member>\n\t\t\t\t\t</memberlist>\n\t\t\t\t</link>\n\t\t\t\t<link name="names" type="link_profile">\n\t\t\t\t\t<memberlist>\n\t\t\t\t\t\t<member>\n\t\t\t\t\t\t\t<username><![CDATA[wxid_yr9kqgy0sx6s22]]></username>\n\t\t\t\t\t\t\t<nickname><![CDATA[帅哥]]></nickname>\n\t\t\t\t\t\t</member>\n\t\t\t\t\t</memberlist>\n\t\t\t\t\t<separator><![CDATA[、]]></separator>\n\t\t\t\t</link>\n\t\t\t</link_list>\n\t\t</content_template>\n\t</sysmsgtemplate>\n</sysmsg>
 '''
+xml_data_invite3 ='''
+<sysmsg type="sysmsgtemplate">\n\t<sysmsgtemplate>\n\t\t<content_template type="tmpl_type_profile">\n\t\t\t<plain><![CDATA[]]></plain>\n\t\t\t<template><![CDATA["$username$"邀请"$names$"加入了群聊]]></template>\n\t\t\t<link_list>\n\t\t\t\t<link name="username" type="link_profile">\n\t\t\t\t\t<memberlist>\n\t\t\t\t\t\t<member>\n\t\t\t\t\t\t\t<username><![CDATA[wxid_gqhxp9ipfxv222]]></username>\n\t\t\t\t\t\t\t<nickname><![CDATA[🌙 周星星🌙(管理)]]></nickname>\n\t\t\t\t\t\t</member>\n\t\t\t\t\t</memberlist>\n\t\t\t\t</link>\n\t\t\t\t<link name="names" type="link_profile">\n\t\t\t\t\t<memberlist>\n\t\t\t\t\t\t<member>\n\t\t\t\t\t\t\t<username><![CDATA[wxid_yr9kqgy0sx6s22]]></username>\n\t\t\t\t\t\t\t<nickname><![CDATA[帅哥]]></nickname>\n\t\t\t\t\t\t</member>\n\t\t\t\t\t</memberlist>\n\t\t\t\t\t<separator><![CDATA[、]]></separator>\n\t\t\t\t</link>\n\t\t\t</link_list>\n\t\t</content_template>\n\t</sysmsgtemplate>\n</sysmsg>
+'''
 xml_data_pai ='''
 <sysmsg type="pat">\n<pat>\n  <fromusername>wxid_gqhxp9ipfxv222</fromusername>\n  <chatusername>26516713149@chatroom</chatusername>\n  <pattedusername>wxid_6q3ar4xb7m1922</pattedusername>\n  <patsuffix><![CDATA[]]></patsuffix>\n  <patsuffixversion>0</patsuffixversion>\n\n\n\n\n  <template><![CDATA["${wxid_gqhxp9ipfxv222}" 拍了拍我]]></template>\n\n\n\n\n</pat>\n</sysmsg>
 '''
@@ -114,7 +117,7 @@ def parse_wechat_message(xml_data):
 
             return {
                 'message_type': message_type,
-                'subtype': "",
+                'subtype': "invite",
                 'inviter_username': inviter,
                 'joiners_usernames': joiners
             }
@@ -143,6 +146,6 @@ def parse_wechat_message(xml_data):
 
 
 # 调用函数并打印结果
-parsed_message = parse_wechat_message(xml_data_pai)
+parsed_message = parse_wechat_message(xml_data_invite3)
 print(parsed_message)
 #print(f"{parsed_message['inviter_username']['nickname']} 邀请 {parsed_message['joiners_usernames'][0]['nickname'] } 加入了群聊!")

@@ -50,10 +50,10 @@ class WechatMessage(ChatMessage):
             self.ctype = ContextType.CARD
         elif itchat_msg["type"] in ['7005']:
             result = self.parse_wechat_message( itchat_msg["msg"])
-            if result['message_type'] =='sysmsgtemplate' and  result['sub_type'] =='invite' :
+            if result['message_type'] =='sysmsgtemplate' and  result['subtype'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
                 self.ctype = ContextType.JOIN_GROUP
-                self.content = itchat_msg["msg"]
+                #self.content = itchat_msg["msg"]
                 self.actual_user_nickname = result['joiners_usernames'][0]['nickname']
                 self.content= f"{result['inviter_username']['nickname']} 邀请 {self.actual_user_nickname } 加入了群聊!"
 
