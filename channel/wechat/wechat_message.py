@@ -133,7 +133,7 @@ class WechatMessage(ChatMessage):
             self.actual_user_id = itchat_msg["from_id"]
             if self.ctype not in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.EXIT_GROUP]:
                 pass
-                #self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
+                self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
 
     def get_user(self,users, username):
         # 使用 filter 函数通过给定的 userName 来找寻符合条件的元素
