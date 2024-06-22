@@ -53,9 +53,9 @@ class WechatMessage(ChatMessage):
             if result['message_type'] =='sysmsgtemplate' and  result['subtype'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
                 self.ctype = ContextType.JOIN_GROUP
-                #self.content = itchat_msg["msg"]
+                self.content = itchat_msg["msg"]
                 self.actual_user_nickname = result['joiners_usernames'][0]['nickname']
-                self.content= f"{result['inviter_username']['nickname']} 邀请 {self.actual_user_nickname } 加入了群聊!"
+                #self.content= f"{result['inviter_username']['nickname']} 邀请 {self.actual_user_nickname } 加入了群聊!"
 
             elif result['message_type'] =='pat':
 
