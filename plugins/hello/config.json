@@ -8,7 +8,7 @@
 
   "group_exit_prompt": "请你随机使用一种风格跟其他群用户说他违反规则\"{nickname}\"退出群聊。",
 
-  "patpat_prompt": "拍我就可以得到帮助，并告诉用户输入#help可以查看帮助信息。",
+  "patpat_prompt": "拍我就可以得到帮助，并告诉用户输入>+文字和我对话",
 
   "use_character_desc": false
 }
