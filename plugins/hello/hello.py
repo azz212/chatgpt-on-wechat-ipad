@@ -50,7 +50,7 @@ class Hello(Plugin):
         ]:
             return
         msg: ChatMessage = e_context["context"]["msg"]
-        group_name = msg.from_user_nickname
+        group_name = msg.other_user_nickname #MODIFY THE value
         if e_context["context"].type == ContextType.JOIN_GROUP:
             if "group_welcome_msg" in conf() or group_name in self.group_welc_fixed_msg:
                 reply = Reply()
