@@ -14,7 +14,7 @@ import json
 import os
 import re
 from threading import Thread
-
+from .IdiomGame import IdiomGame
 @plugins.register(
     name="idiom",
     desire_priority=-1,
@@ -26,8 +26,6 @@ from threading import Thread
 
 
 class idiom(Plugin):
-
-
     def __init__(self):
         super().__init__()
         try:
@@ -48,6 +46,22 @@ class idiom(Plugin):
         self.game_answer = {}
         self.game_success = {}
         self.idiom_pic = {}
+    def on_receive_message(self, e_context: EventContext):
+        if e_context['context']['msg'].ctype!=ContextType.TEXT:
+            return
+        context = e_context['context']
+        msg : ChatMessage = e_context['context']['msg']
+        content = e_context["context"].content
+        group_name = msg.from_user_nickname
+
+        game = IdiomGame()  # 实例化游戏类
+        if content == "看图猜成语" and not game.is_game_running():
+            game.start_game(group_name)
+            game.send_reply(e_context, f"游戏开始，准备发送第一张图片。")
+            #e_context.action = EventAction.BREAK_PASS
+            return  # 游戏开始，退出当前函数
+
+
     def on_handle_context(self, e_context: EventContext):
         if e_context["context"].type not in [
             ContextType.TEXT,
@@ -59,31 +73,6 @@ class idiom(Plugin):
 
         content = e_context["context"].content
         logger.debug("[idiom] on_handle_context. content: %s" % content)
-        if  "看图猜成语" == content :
-            Thread(target=self.start_guess_idiom_image, name="看图猜成语", args=(e_context,)).start()
-
-    def on_receive_message(self, e_context: EventContext):
-        if e_context['context']['msg'].ctype!=ContextType.TEXT:
-            return
-        context = e_context['context']
-        cmsg : ChatMessage = e_context['context']['msg']
-        content = e_context["context"].content
-        if "看图猜成语" == content:
-            username = None
-            room_id=cmsg.other_user_id
-            session_id = cmsg.from_user_id
-            user_id =cmsg.from_user_id
-            reply = Reply()
-            reply.type = ReplyType.TEXT
-            reply.content = (
-                f'看图猜成语游戏开始，总共五轮！\n'
-                f'如果要提前中止游戏，\n'
-                f'请回复“退出游戏”。\n'
-                f'如果未成功收到图片，\n'
-                f'请回复“重发”。'
-            )
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
     def start_guess_idiom_image(self, e_context: EventContext):
         msg: ChatMessage = e_context["context"]["msg"]
