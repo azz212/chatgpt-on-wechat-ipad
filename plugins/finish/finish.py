@@ -29,7 +29,8 @@ class Finish(Plugin):
         content = e_context["context"].content
         logger.debug("[Finish] on_handle_context. content: %s" % content)
         trigger_prefix = conf().get("plugin_trigger_prefix", "$")
-        if content.startswith(trigger_prefix):
+
+        if content.startswith(trigger_prefix) and trigger_prefix!="": #如果插件触发为“”则不检查是否处理
             reply = Reply()
             reply.type = ReplyType.ERROR
             reply.content = "未知插件命令\n查看插件命令列表请输入#help 插件名\n"
