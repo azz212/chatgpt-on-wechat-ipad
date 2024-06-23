@@ -1,7 +1,7 @@
 {
     "group_welc_fixed_msg": {
-      "CHATGPT ON WECHAT": "欢迎\"{nickname}\"加入群聊，请自我介绍！！",
-      "个人群": "欢迎\"{nickname}\"加入群聊，请自我介绍！。"
+      "CHATGPT ON WECHAT": "欢迎\"{nickname}\"加入群聊，请自我介绍！",
+      "个人群": "欢迎\"{nickname}\"加入群聊，请自我介绍！"
     },
 
   "group_welc_prompt": "欢迎\"{nickname}\"加入群聊，请自我介绍。",

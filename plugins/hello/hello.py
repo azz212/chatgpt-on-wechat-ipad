@@ -66,26 +66,32 @@ class Hello(Plugin):
             e_context["context"].content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
             e_context.action = EventAction.BREAK  # 事件结束，进入默认处理逻辑
             if not self.config or not self.config.get("use_character_desc"):
-                e_context["context"]["generate_breaked_by"] = EventAction.BREAK
+                e_context["context"]["generate_breaked_by"] = EventAction.BREAK_PASS
 
             return
         
         if e_context["context"].type == ContextType.EXIT_GROUP:
-            if conf().get("group_chat_exit_group"):
-                e_context["context"].type = ContextType.TEXT
-                e_context["context"].content = self.group_exit_prompt.format(nickname=msg.actual_user_nickname)
-                e_context.action = EventAction.BREAK  # 事件结束，进入默认处理逻辑
+            if msg.from_user_id !=msg.other_user_id:
+                if conf().get("group_chat_exit_group"):
+                    e_context["context"].type = ContextType.TEXT
+                    e_context["context"].content = self.group_exit_prompt.format(nickname=msg.actual_user_nickname)
+                    e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
+                    return
+                e_context.action = EventAction.BREAK_PASS
                 return
-            e_context.action = EventAction.BREAK
-            return
             
         if e_context["context"].type == ContextType.PATPAT:
-            e_context["context"].type = ContextType.TEXT
-            e_context["context"].content = self.patpat_prompt
-            e_context.action = EventAction.BREAK  # 事件结束，进入默认处理逻辑
-            if not self.config or not self.config.get("use_character_desc"):
-                e_context["context"]["generate_breaked_by"] = EventAction.BREAK
-            return
+            if '拍了拍我' in msg.content:
+
+                reply = Reply()
+                reply.type = ReplyType.TEXT
+                reply.content =self.patpat_prompt
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
+                if not self.config or not self.config.get("use_character_desc"):
+                    e_context["context"]["generate_breaked_by"] = EventAction.BREAK_PASS
+                return
+
 
         content = e_context["context"].content
         logger.debug("[Hello] on_handle_context. content: %s" % content)

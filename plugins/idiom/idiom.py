@@ -37,6 +37,8 @@ class idiom(Plugin):
 
             logger.info("[idiom] inited")
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
+            self.handlers[Event.ON_RECEIVE_MESSAGE] = self.on_receive_message
+
         except Exception as e:
             logger.error(f"[idiom]初始化异常：{e}")
             raise "[idiom] init failed, ignore "
@@ -60,6 +62,28 @@ class idiom(Plugin):
         if  "看图猜成语" == content :
             Thread(target=self.start_guess_idiom_image, name="看图猜成语", args=(e_context,)).start()
 
+    def on_receive_message(self, e_context: EventContext):
+        if e_context['context']['msg'].ctype!=ContextType.TEXT:
+            return
+        context = e_context['context']
+        cmsg : ChatMessage = e_context['context']['msg']
+        content = e_context["context"].content
+        if "看图猜成语" == content:
+            username = None
+            room_id=cmsg.other_user_id
+            session_id = cmsg.from_user_id
+            user_id =cmsg.from_user_id
+            reply = Reply()
+            reply.type = ReplyType.TEXT
+            reply.content = (
+                f'看图猜成语游戏开始，总共五轮！\n'
+                f'如果要提前中止游戏，\n'
+                f'请回复“退出游戏”。\n'
+                f'如果未成功收到图片，\n'
+                f'请回复“重发”。'
+            )
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
     def start_guess_idiom_image(self, e_context: EventContext):
         msg: ChatMessage = e_context["context"]["msg"]

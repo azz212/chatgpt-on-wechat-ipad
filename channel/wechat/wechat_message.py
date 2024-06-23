@@ -64,9 +64,11 @@ class WechatMessage(ChatMessage):
                 self.content = itchat_msg["msg"]
 
                 if is_group:
-                    self.actual_user_id = result['from_username']
+                    self.from_user_id = result['from_user_id']
+                    self.actual_user_id = result['from_user_id']
                     displayName, nickname = self.get_chatroom_nickname(self.room_id, self.actual_user_id)
                     self.actual_user_nickname = displayName or nickname
+                    self.content = result['action']
 
             elif is_group and ("移出了群聊" in itchat_msg["msg"]):
                 self.ctype = ContextType.EXIT_GROUP
@@ -91,7 +93,8 @@ class WechatMessage(ChatMessage):
 
         else:
             raise NotImplementedError("Unsupported message type: Type:{} MsgType:{}".format(itchat_msg["type"], itchat_msg["type"]))
-        self.from_user_id = itchat_msg["from_id"]
+        if not self.from_user_id:
+            self.from_user_id = itchat_msg["from_id"]
 
         self.to_user_id = itchat_msg["to_id"]
 
@@ -130,7 +133,8 @@ class WechatMessage(ChatMessage):
             self.is_at = False if len(itchat_msg["at_ids"])==0 else True
             self.at_list = itchat_msg["at_ids"]
             #self.at_list_member = self.bot.shared_wx_contact_list[self.room_id]['chatRoomMembers']
-            self.actual_user_id = itchat_msg["from_id"]
+            if not self.actual_user_id:
+                self.actual_user_id = itchat_msg["from_id"]
             if self.ctype not in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.EXIT_GROUP]:
                 pass
                 self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
@@ -201,7 +205,7 @@ class WechatMessage(ChatMessage):
             template_content = root.find('.//template').text if root.find('.//template') is not None else None
             return {
                 'message_type': message_type,
-                'from_username': from_username,
+                'from_user_id': from_username,
                 'action': template_content
             }
         elif message_type == 'sysmsgtemplate':
