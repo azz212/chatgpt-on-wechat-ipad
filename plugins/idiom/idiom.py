@@ -55,7 +55,7 @@ class idiom(Plugin):
         group_name = msg.from_user_nickname
 
         game = IdiomGame()  # 实例化游戏类
-        if content == "看图猜成语" and not game.is_game_running():
+        if content == "看图猜成语1" and not game.is_game_running():
             game.start_game(group_name)
             game.send_reply(e_context, f"游戏开始，准备发送第一张图片。")
             #e_context.action = EventAction.BREAK_PASS
