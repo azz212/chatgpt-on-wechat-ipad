@@ -82,6 +82,8 @@ class idiom(Plugin):
                 reply = Reply()
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
+            else:
+                e_context.action = EventAction.BREAK_PASS
     def _load_config_template(self):
         logger.debug("No Hello plugin config.json, use plugins/hello/config.json.template")
         try:
