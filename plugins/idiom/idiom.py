@@ -131,8 +131,8 @@ class idiom(Plugin):
             self.game_mode_rooms[room_id] = False
             self.send_text_reply(e_context,f'游戏已中止！')
         elif content == "重发":
-            self.game_mode_rooms[room_id] = False
-            self.send_text_reply(e_context,f'游戏已中止！')
+            if  self.game_mode_rooms.get(room_id, False):
+                self.send_image_reply(e_context,self.idiom_pic[room_id])
         elif self.game_mode_rooms.get(room_id, False):
             self.gaming_function(e_context)
 
@@ -157,11 +157,11 @@ class idiom(Plugin):
             if not self.game_mode_rooms.get(room_id):
                 break
             save_path, idiom_data,url = self.get_idiom()
-            self.idiom_pic[room_id] = save_path
+            self.idiom_pic[room_id] = url
             self.game_answer[room_id] = idiom_data
-            url_parts = list(urlsplit(url))
-            url_parts[2] =quote(url_parts[2])
-            encode_url = urlunsplit(url_parts)
+            #url_parts = list(urlsplit(url))
+            #url_parts[2] =quote(url_parts[2])
+            #encode_url = urlunsplit(url_parts)
             _send_info(e_context,url,ReplyType.IMAGE_URL)
             _send_info(e_context,f'第{i + 1}轮题目：')
             _send_info(e_context,'请在六十秒内回答，否则将跳过此题')
@@ -248,6 +248,7 @@ class idiom(Plugin):
             data = json_data['data']
             return data
         except Exception as e:
+            logger.info(e)
             return None
 
 def _send_info(e_context: EventContext, content: str,type:ReplyType=ReplyType.TEXT):
