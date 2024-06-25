@@ -124,7 +124,7 @@ class idiom(Plugin):
             Thread(target=self.start_guess_idiom_image, name="看图猜成语", args=(e_context,)).start()
             reply = Reply()
             reply.type = ReplyType.TEXT
-            reply.content = f"看图猜成语开始"
+            #reply.content = f"看图猜成语开始"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
         elif content == "退出游戏":
@@ -152,6 +152,7 @@ class idiom(Plugin):
             "祝您玩得愉快！😊"
         )
         _send_info(e_context,message)
+        time.sleep(0.2)
         self.game_mode_rooms[room_id] = True
         for i in range(5):
             if not self.game_mode_rooms.get(room_id):
@@ -163,8 +164,7 @@ class idiom(Plugin):
             #url_parts[2] =quote(url_parts[2])
             #encode_url = urlunsplit(url_parts)
             _send_info(e_context,url,ReplyType.IMAGE_URL)
-            _send_info(e_context,f'第{i + 1}轮题目：')
-            _send_info(e_context,'请在六十秒内回答，否则将跳过此题')
+            _send_info(e_context,f'第{i + 1}轮题目：请在六十秒内回答，否则将跳过此题')
             cur_time = time.time()
             while time.time() - cur_time < 63:
                 if not self.game_mode_rooms.get(room_id, False):
