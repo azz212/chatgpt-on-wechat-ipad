@@ -12,7 +12,6 @@ import requests
 import json
 import os
 import re
-from urllib.parse import quote,urlsplit,urlunsplit
 from threading import Thread
 #from .IdiomGame import IdiomGame
 import threading
@@ -69,7 +68,7 @@ class idiom(Plugin):
         context = e_context['context']
         msg: ChatMessage = e_context['context']['msg']
         content = e_context["context"].content
-        room_id = msg.other_user_id
+        room_id = msg.from_user_id
 
         if content == "看图猜成语":
             reply = Reply()
@@ -82,9 +81,6 @@ class idiom(Plugin):
                 reply = Reply()
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
-            else:
-                pass
-                #e_context.action = EventAction.BREAK_PASS
     def _load_config_template(self):
         logger.debug("No Hello plugin config.json, use plugins/hello/config.json.template")
         try:
@@ -125,15 +121,15 @@ class idiom(Plugin):
             Thread(target=self.start_guess_idiom_image, name="看图猜成语", args=(e_context,)).start()
             reply = Reply()
             reply.type = ReplyType.TEXT
-            #reply.content = f"看图猜成语开始"
+            reply.content = f"看图猜成语开始"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
         elif content == "退出游戏":
             self.game_mode_rooms[room_id] = False
             self.send_text_reply(e_context,f'游戏已中止！')
         elif content == "重发":
-            if  self.game_mode_rooms.get(room_id, False):
-                self.send_image_reply(e_context,self.idiom_pic[room_id])
+            self.game_mode_rooms[room_id] = False
+            self.send_text_reply(e_context,f'游戏已中止！')
         elif self.game_mode_rooms.get(room_id, False):
             self.gaming_function(e_context)
 
@@ -153,19 +149,16 @@ class idiom(Plugin):
             "祝您玩得愉快！😊"
         )
         _send_info(e_context,message)
-        time.sleep(0.2)
         self.game_mode_rooms[room_id] = True
         for i in range(5):
             if not self.game_mode_rooms.get(room_id):
                 break
             save_path, idiom_data,url = self.get_idiom()
-            self.idiom_pic[room_id] = url
+            self.idiom_pic[room_id] = save_path
             self.game_answer[room_id] = idiom_data
-            #url_parts = list(urlsplit(url))
-            #url_parts[2] =quote(url_parts[2])
-            #encode_url = urlunsplit(url_parts)
-            _send_info(e_context,url,ReplyType.IMAGE_URL)
-            _send_info(e_context,f'第{i + 1}轮题目：请在六十秒内回答，否则将跳过此题')
+            self.send_image_reply(e_context,image_path=url)
+            _send_info(e_context,f'第{i + 1}轮题目：')
+            _send_info(e_context,'请在六十秒内回答，否则将跳过此题')
             cur_time = time.time()
             while time.time() - cur_time < 63:
                 if not self.game_mode_rooms.get(room_id, False):
@@ -188,9 +181,8 @@ class idiom(Plugin):
             _send_info(e_context,content=answer)
             time.sleep(0.5)
         msg_over = ["游戏结束！"]
-        if room_id in self.game_point:
-            for nick_name, point in self.game_point[room_id].items():
-                msg_over.append(f"{nick_name}：{point} 分")
+        for nick_name, point in self.game_point[room_id].items():
+            msg_over.append(f"{nick_name}：{point} 分")
         _send_info(e_context,content='\n'.join(msg_over))
 
         # 清空游戏数据
@@ -220,8 +212,6 @@ class idiom(Plugin):
                             self.game_point[room_id][nick_name] = 1
                     else:
                         self.game_point[room_id] = {nick_name: 1}
-                else:
-                    e_context.action=EventAction.BREAK_PASS
         except Exception as e:
             print(e)
     def get_idiom(self):
@@ -251,10 +241,9 @@ class idiom(Plugin):
             data = json_data['data']
             return data
         except Exception as e:
-            logger.info(e)
             return None
 
-def _send_info(e_context: EventContext, content: str,type:ReplyType=ReplyType.TEXT):
-    reply = Reply(type, content)
+def _send_info(e_context: EventContext, content: str):
+    reply = Reply(ReplyType.TEXT, content)
     channel = e_context["channel"]
     channel.send(reply, e_context["context"])
