@@ -83,7 +83,8 @@ class idiom(Plugin):
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
             else:
-                e_context.action = EventAction.BREAK_PASS
+                pass
+                #e_context.action = EventAction.BREAK_PASS
     def _load_config_template(self):
         logger.debug("No Hello plugin config.json, use plugins/hello/config.json.template")
         try:
@@ -219,6 +220,8 @@ class idiom(Plugin):
                             self.game_point[room_id][nick_name] = 1
                     else:
                         self.game_point[room_id] = {nick_name: 1}
+                else:
+                    e_context.action=EventAction.BREAK_PASS
         except Exception as e:
             print(e)
     def get_idiom(self):
