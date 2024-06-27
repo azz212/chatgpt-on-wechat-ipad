@@ -42,3 +42,4 @@ client_config.json
 plugins/plugin_summary/chat.db
 /plugins/neteasy/video/
 /video/
+/plugins/idiom/Pic_Cache/
