@@ -136,6 +136,8 @@ class TaskManager(object):
         #机器人ID
         robot_user_id = ""
         #通道
+        self.isRelogin=False
+        return
         channel_name = RobotConfig.conf().get("channel_type", "wx")
         if channel_name == "wx":
             robot_user_id = itchat.instance.storageClass.userName
