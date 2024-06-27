@@ -73,14 +73,14 @@ class WechatMessage(ChatMessage):
             elif is_group and ("移出了群聊" in itchat_msg["msg"]):
                 self.ctype = ContextType.EXIT_GROUP
                 self.content = itchat_msg["msg"]
-                self.actual_user_nickname = re.findall(r"\"(.*?)\"", itchat_msg["Content"])[0]
+                self.actual_user_nickname = re.findall(r"\"(.*?)\"", itchat_msg["msg"])
                     
             elif "你已添加了" in itchat_msg["msg"]:  #通过好友请求
                 self.ctype = ContextType.ACCEPT_FRIEND
                 self.content = itchat_msg["msg"]
 
             else:
-                raise NotImplementedError("Unsupported note message: " + itchat_msg["Content"])
+                raise NotImplementedError("Unsupported note message: " + itchat_msg["msg"])
         elif itchat_msg["type"] in ['8005','9005']:
             self.ctype = ContextType.FILE
             #self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
@@ -92,7 +92,8 @@ class WechatMessage(ChatMessage):
             self.content = itchat_msg.get("msg")
 
         else:
-            raise NotImplementedError("Unsupported message type: Type:{} MsgType:{}".format(itchat_msg["type"], itchat_msg["type"]))
+            raise NotImplementedError("Unsupported message type: Type:{} MsgType:{}".format(itchat_msg["type"],
+                                                                                            itchat_msg["type"]))
         if not self.from_user_id:
             self.from_user_id = itchat_msg["from_id"]
 
