@@ -68,9 +68,10 @@ class Apilot(Plugin):
             keyword  = content.split(" ")
             if len(keyword)>1:
                 moyu = self.get_jupai_pic(keyword[1])
-                reply_type = ReplyType.IMAGE_URL if self.is_valid_url(moyu) else ReplyType.TEXT
-                reply = self.create_reply(reply_type, moyu)
-                e_context["reply"] = reply
+                if moyu:
+                    reply_type = ReplyType.IMAGE_URL if self.is_valid_url(moyu) else ReplyType.TEXT
+                    reply = self.create_reply(reply_type, moyu)
+                    e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
         if content == "摸鱼视频":
@@ -176,6 +177,8 @@ class Apilot(Plugin):
 
         return help_text
     def get_jupai_pic(self,keyword):
+        if len(keyword)>=20:
+            return None
         url = "https://api.andeer.top/API/jupai.php?text="+keyword
         payload = "format=json"
         headers = {'Content-Type': "application/x-www-form-urlencoded"}
