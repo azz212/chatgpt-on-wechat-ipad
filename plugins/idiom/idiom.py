@@ -71,10 +71,10 @@ class idiom(Plugin):
         content = e_context["context"].content
         room_id = msg.other_user_id
 
-        if content == "看图猜成语":
-            reply = Reply()
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS
+        # if content == "看图猜成语":
+        #     reply = Reply()
+        #     e_context["reply"] = reply
+        #     e_context.action = EventAction.BREAK_PASS
 
         if room_id in self.game_mode_rooms and self.game_mode_rooms[room_id]:
             # Process game-related commands
