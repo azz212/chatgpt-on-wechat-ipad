@@ -64,7 +64,15 @@ class Apilot(Plugin):
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
             return
-
+        if "举牌" in  content:
+            keyword  = content.split(" ")
+            if len(keyword)>1:
+                moyu = self.get_jupai_pic(keyword[1])
+                reply_type = ReplyType.IMAGE_URL if self.is_valid_url(moyu) else ReplyType.TEXT
+                reply = self.create_reply(reply_type, moyu)
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            return
         if content == "摸鱼视频":
             moyu = self.get_moyu_calendar_video()
             reply_type = ReplyType.VIDEO_URL if self.is_valid_url(moyu) else ReplyType.TEXT
@@ -167,7 +175,12 @@ class Apilot(Plugin):
         help_text += "  🌌 星座: 发送星座名称查看今日运势，如“白羊座”。\n"
 
         return help_text
-
+    def get_jupai_pic(self,keyword):
+        url = "https://api.andeer.top/API/jupai.php?text="+keyword
+        payload = "format=json"
+        headers = {'Content-Type': "application/x-www-form-urlencoded"}
+        bagua_info = requests.request('GET', url, headers=headers)
+        return url
     def get_morning_news(self, alapi_token, morning_news_text_enabled):
         if not alapi_token:
             url = BASE_URL_VVHAN + "60s?type=json"
@@ -606,3 +619,6 @@ hot_trend_types = {
     "百度": "baiduRD",
     "豆瓣": "douban",
 }
+if __name__ =="__main__":
+    jupai = Apilot()
+    jupai.get_jupai_pic("踢人")

@@ -123,13 +123,16 @@ class Summary(Plugin):
         #     'is_triggered': is_triggered
         # })
         # 执行 SQL 插入语句
-        c.execute(
-            "INSERT INTO chat_records (sessionid, msgid, user, content, type, timestamp, room_id, user_id, is_triggered) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (session_id, msg_id, user, content, msg_type, timestamp, room_id, user_id, is_triggered))
+        try:
+            c.execute(
+                "INSERT INTO chat_records (sessionid, msgid, user, content, type, timestamp, room_id, user_id, is_triggered) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (session_id, msg_id, user, content, msg_type, timestamp, room_id, user_id, is_triggered))
 
-        #c.execute("INSERT OR REPLACE INTO chat_records VALUES (?,?,?,?,?,?,?,?,?)", (session_id, msg_id, user, content, msg_type, timestamp, room_id,user_id,is_triggered))
-        self.conn.commit()
-    
+            #c.execute("INSERT OR REPLACE INTO chat_records VALUES (?,?,?,?,?,?,?,?,?)", (session_id, msg_id, user, content, msg_type, timestamp, room_id,user_id,is_triggered))
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+
     def _get_records(self, session_id,room_id, start_timestamp=0, limit=9999):
 
         c = self.conn.cursor()
@@ -167,7 +170,7 @@ class Summary(Plugin):
                 username = cmsg.from_user_id
 
         is_triggered = False
-        content = context.content
+        content =context.content
         if context.get("isgroup", False): # 群聊
             # 校验关键字
             match_prefix = check_prefix(content, conf().get('group_chat_prefix'))
@@ -181,11 +184,12 @@ class Summary(Plugin):
             room_id = cmsg.from_user_id
             if match_prefix is not None:
                 is_triggered = True
-
-        self._insert_record(session_id, cmsg.msg_id, username, context.content, str(context.type),
-                            cmsg.create_time,room_id,user_id, int(is_triggered))
-        # logger.debug("[Summary] {}:{} ({})" .format(username, context.content, session_id))
-
+        try:
+            self._insert_record(session_id, cmsg.msg_id, username, context.content, str(context.type),
+                                cmsg.create_time,room_id,user_id, int(is_triggered))
+            # logger.debug("[Summary] {}:{} ({})" .format(username, context.content, session_id))
+        except Exception as e:
+            print(e)
     def _translate_text_to_commands(self, text):
         llm = ModelFactory().create_llm_model(**build_model_params({
             "openai_api_key": conf().get("open_ai_api_key", ""),
