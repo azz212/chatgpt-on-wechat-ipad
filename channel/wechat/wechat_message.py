@@ -113,7 +113,7 @@ class WechatMessage(ChatMessage):
                 self.self_display_name =  displayName or nickname
                 _,self.to_user_nickname  = self.get_chatroom_nickname(self.room_id, self.to_user_id)
 
-                self.to_user_nickname = self.get_chatroom_nickname(self.room_id, self.to_user_id)
+                #self.to_user_nickname = self.get_chatroom_nickname(self.room_id, self.to_user_id)
                 self.other_user_nickname = iPadWx.shared_wx_contact_list[self.room_id]['nickName']
             else:
                 if itchat_msg['bot_id']==itchat_msg['from_id']:#机器人发送
