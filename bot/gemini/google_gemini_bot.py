@@ -6,18 +6,21 @@ Google gemini bot
 """
 # encoding:utf-8
 
-from bot.bot import Bot
+from bot.bot1 import Bot
 import google.generativeai as genai
+from bot.gemini.google_genimi_vision import GeminiVision
+
 from bot.session_manager import SessionManager
 from bridge.context import ContextType, Context
 from bridge.reply import Reply, ReplyType
 from common.log import logger
 from config import conf
 from bot.baidu.baidu_wenxin_session import BaiduWenxinSession
-
-
+import os
+os.environ["http_proxy"] = "http://127.0.0.1:7890"
+os.environ["https_proxy"] = "http://127.0.0.1:7890"
 # OpenAI对话模型API (可用)
-class GoogleGeminiBot(Bot):
+class GoogleGeminiBot(Bot,GeminiVision):
 
     def __init__(self):
         super().__init__()
@@ -33,18 +36,30 @@ class GoogleGeminiBot(Bot):
             logger.info(f"[Gemini] query={query}")
             session_id = context["session_id"]
             session = self.sessions.session_query(query, session_id)
-            gemini_messages = self._convert_to_gemini_messages(self.filter_messages(session.messages))
-            genai.configure(api_key=self.api_key)
+            gemini_messages = self._convert_to_gemini_messages(self._filter_messages(session.messages))
+
+            vision_res = self.do_vision_completion_if_need(session_id,query) # Image recongnition and vision completion
+            if vision_res:
+                return vision_res
+
+            genai.configure(api_key=self.api_key,transport='rest')
             model = genai.GenerativeModel('gemini-pro')
             response = model.generate_content(gemini_messages)
-            reply_text = response.text
+            reply_text = self.remove_markdown(response.text)
             self.sessions.session_reply(reply_text, session_id)
             logger.info(f"[Gemini] reply={reply_text}")
             return Reply(ReplyType.TEXT, reply_text)
         except Exception as e:
             logger.error("[Gemini] fetch reply error, may contain unsafe content")
             logger.error(e)
-            return Reply(ReplyType.ERROR, "invoke [Gemini] api failed!")
+
+
+    def remove_markdown(self, text):
+        # 替换Markdown的粗体标记
+        text = text.replace("**", "")
+        # 替换Markdown的标题标记
+        text = text.replace("### ", "").replace("## ", "").replace("# ", "")
+        return text
 
     def _convert_to_gemini_messages(self, messages: list):
         res = []
@@ -61,8 +76,7 @@ class GoogleGeminiBot(Bot):
             })
         return res
 
-    @staticmethod
-    def filter_messages(messages: list):
+    def _filter_messages(self, messages: list):
         res = []
         turn = "user"
         if not messages:

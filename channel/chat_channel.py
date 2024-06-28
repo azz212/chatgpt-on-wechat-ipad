@@ -327,7 +327,8 @@ class ChatChannel(Channel):
                                     reply_text = conf().get("single_chat_reply_prefix", "") + reply_text + conf().get(
                                     "single_chat_reply_suffix", "")
                             reply.ext["prompt"] = reply_text
-
+                elif reply.type ==ReplyType.LINK:
+                    pass
 
                 else:
                     logger.error("[WX] unknown reply type: {}".format(reply.type))

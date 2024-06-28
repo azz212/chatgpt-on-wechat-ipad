@@ -313,6 +313,9 @@ class WechatChannel(ChatChannel):
             video_storage.seek(0)
             #itchat.send_video(video_storage, toUserName=receiver)
             logger.info("[WX] sendVideo url={}, receiver={}".format(video_url, receiver))
+        elif reply.type == ReplyType.LINK:
+            self.bot.forward_video(receiver, reply.content)
+            logger.info("[WX] sendCARD={}, receiver={}".format(reply.content, receiver))
 
         # 统一的发送函数，每个Channel自行实现，根据reply的type字段发送不同类型的消息
     def send_human(self, reply: Reply, context: Context):

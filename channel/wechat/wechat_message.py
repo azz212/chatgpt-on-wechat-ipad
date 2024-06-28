@@ -39,16 +39,16 @@ class WechatMessage(ChatMessage):
             self.ctype = ContextType.VOICE
             self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
             #self._prepare_fn = lambda: itchat_msg.download(self.content)
-        elif itchat_msg["type"] in ['8005', '9005']:#群聊红包、文件、链接、小程序等类型
+        elif itchat_msg["type"] in ['8005']:#群聊红包、文件、链接、小程序等类型
             self.ctype = ContextType.XML
             self.content = itchat_msg["msg"]
         elif itchat_msg["type"] in ['8006', '9006']:  # 群聊地图位置消息
             self.ctype = ContextType.MAP
         elif itchat_msg["type"] in ['8007', '9007']:#群聊表情包
-            self.ctype = ContextType.EMOJ
+            self.ctype = ContextType.EMOJI
         elif itchat_msg["type"] in ['8008', '9008']:#群聊名片
             self.ctype = ContextType.CARD
-        elif itchat_msg["type"] in ['7005']:
+        elif itchat_msg["type"] in ['7005','9005']:
             result = self.parse_wechat_message( itchat_msg["msg"])
             if result['message_type'] =='sysmsgtemplate' and  result['subtype'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
@@ -69,7 +69,18 @@ class WechatMessage(ChatMessage):
                     displayName, nickname = self.get_chatroom_nickname(self.room_id, self.actual_user_id)
                     self.actual_user_nickname = displayName or nickname
                     self.content = result['action']
+            elif result['message_type'] =='appmsg' and  result['subtype'] =='reference' :
+                # 这里只能得到nickname， actual_user_id还是机器人的id
+                self.ctype = ContextType.QUOTE
+                self.content = result["title"] #引用说的话
+            elif result['message_type'] ==19 and 'title' in  result  and  result['title'] =='群聊的聊天记录':
 
+                # 这里只能得到nickname， actual_user_id还是机器人的id
+                self.ctype = ContextType.LINK
+                self.content = result["image_infos"] # 内容 list
+            elif "你已添加了" in itchat_msg["msg"]:  #通过好友请求
+                self.ctype = ContextType.ACCEPT_FRIEND
+                self.content = itchat_msg["msg"]
             elif is_group and ("移出了群聊" in itchat_msg["msg"]):
                 self.ctype = ContextType.EXIT_GROUP
                 self.content = itchat_msg["msg"]
@@ -158,7 +169,7 @@ class WechatMessage(ChatMessage):
         if room_id.endswith("@chatroom") and not wxid.endswith("@chatroom"):
             if room_id in iPadWx.shared_wx_contact_list :
                 logger.debug("无需网络获取，本地读取")
-                #print(iPadWx.shared_wx_contact_list[room_id])
+                #logger.info(iPadWx.shared_wx_contact_list[room_id])
                 member = iPadWx.shared_wx_contact_list[room_id]['chatRoomMembers']
                 #logger.info(member)
                 member_info = self.get_user(member, wxid)
@@ -198,7 +209,7 @@ class WechatMessage(ChatMessage):
 
         # 获取消息类型
         message_type = root.get('type')
-
+        refermsg = root.find('.//refermsg')
         # 根据消息类型提取信息
         if message_type == 'pat':
             # 拍一拍消息
@@ -248,8 +259,139 @@ class WechatMessage(ChatMessage):
                 'new_message_id': newmsgid,
                 'replace_message': replacemsg
             }
+        elif message_type == 'NewXmlChatRoomAccessVerifyApplication':
+            # 提取关键信息
+            # 提取邀请人用户名
+            inviter_username = root.find('.//inviterusername').text if root.find(
+                './/inviterusername') is not None else "N/A"
 
+            # 从 <text> 标签中提取邀请人的昵称
+            text_content = root.find('.//text').text if root.find('.//text') is not None else ""
+            start_index = text_content.find('"') + 1
+            end_index = text_content.find('"', start_index + 1)
+            inviter_nickname = text_content[start_index:end_index] if start_index < end_index else "N/A"
+
+            room_name = root.find('.//RoomName').text if root.find('.//RoomName') is not None else "N/A"
+            invitation_reason = root.find('.//invitationreason').text if root.find(
+                './/invitationreason') is not None else "N/A"
+
+            joiners = []
+            memberlist = root.find('.//memberlist')
+            if memberlist is not None:
+                for member in memberlist.findall('member'):
+                    username = member.find('username').text if member.find('username') is not None else "N/A"
+                    nickname = member.find('nickname').text if member.find('nickname') is not None else "N/A"
+                    headimgurl = member.find('headimgurl').text if member.find('headimgurl') is not None else "N/A"
+                    joiners.append({
+                        'username': username,
+                        'nickname': nickname,
+                        'headimgurl': headimgurl
+                    })
+
+                # 构建JSON结构
+            message_info = {
+                'message_type': 'NewXmlChatRoomAccessVerifyApplication',
+                'subtype': 'invite',
+                'inviter_username': inviter_username,
+                'inviter_nickname': inviter_nickname,
+                'room_name': room_name,
+                'invitation_reason': invitation_reason,
+                'joiners': joiners
+            }
+
+            return message_info
+
+        elif refermsg is not None:
+            # 这是一个引用消息
+            logger.info("引用消息存在，提取关键信息：")
+
+            appmsg = root.find('appmsg')
+            title = appmsg.find('title').text if appmsg.find('title') is not None else "N/A"
+
+            refer_type = refermsg.find('type').text if refermsg.find('type') is not None else "N/A"
+            svrid = refermsg.find('svrid').text if refermsg.find('svrid') is not None else "N/A"
+            fromusr = refermsg.find('fromusr').text if refermsg.find('fromusr') is not None else "N/A"
+            chatusr = refermsg.find('chatusr').text if refermsg.find('chatusr') is not None else "N/A"
+            displayname = refermsg.find('displayname').text if refermsg.find('displayname') is not None else "N/A"
+            content = refermsg.find('content').text if refermsg.find('content') is not None else "N/A"
+            message_info = {
+                'message_type': 'appmsg',
+                'title': title,
+                'content': content
+            }
+            # 添加引用消息的信息
+            message_info.update({
+                'subtype': 'reference',
+                'title': title,
+                'reference': {
+                    'type': refer_type,
+                    'svrid': svrid,
+                    'fromusr': fromusr,
+                    'chatusr': chatusr,
+                    'displayname': displayname,
+                    'content': content
+                }
+            })
+            # 输出提取的信息
+            logger.info(f"消息内容: {title}")
+            logger.info(f"引用消息类型: {refer_type}")
+            logger.info(f"消息ID: {svrid}")
+            logger.info(f"发送人: {fromusr}")
+            logger.info(f"聊天群: {chatusr}")
+            logger.info(f"显示名: {displayname}")
+            logger.info(f"消息内容: {content}")
+            return message_info
         else:
+            # 提取关键信息
+            title = root.find('.//title').text if root.find('.//title') is not None else ''
+            message_type = root.find('.//type').text if root.find('.//type') is not None else ''
+
+            if title =='群聊的聊天记录' and message_type ==19:
+                from_username = root.find('.//fromusername').text if root.find('.//fromusername') is not None else ''
+                # 提取图片信息
+                images_info = []
+                recorditem = root.findall(".//recorditem")
+                # 遍历datalist中的所有dataitem元素
+                root2 = ET.fromstring(recorditem[0].text)
+                for dataitem in root2.findall('.//datalist/dataitem'):
+                    # 提取dataitem中的信息
+                    image_info = {
+                        # 'htmlid': dataitem.get('htmlid'),
+                        'datatype': dataitem.get('datatype'),
+                        # 'dataid': dataitem.get('dataid'),
+                        # 'messageuuid': dataitem.find('.//messageuuid').text if dataitem.find('.//messageuuid') is not None else '',
+                        # 'cdnthumburl': dataitem.find('.//cdnthumburl').text if dataitem.find('.//cdnthumburl') is not None else '',
+                        'sourcetime': dataitem.find('.//sourcetime').text if dataitem.find(
+                            './/sourcetime') is not None else '',
+                        # 'fromnewmsgid': dataitem.find('.//fromnewmsgid').text if dataitem.find('.//fromnewmsgid') is not None else '',
+                        # 'datasize': dataitem.find('.//datasize').text if dataitem.find('.//datasize') is not None else '',
+                        # 'thumbfullmd5': dataitem.find('.//thumbfullmd5').text if dataitem.find('.//thumbfullmd5') is not None else '',
+                        'filetype': dataitem.find('.//filetype').text if dataitem.find(
+                            './/filetype') is not None else '',
+                        # 'cdnthumbkey': dataitem.find('.//cdnthumbkey').text if dataitem.find('.//cdnthumbkey') is not None else '',
+                        'sourcename': dataitem.find('.//sourcename').text if dataitem.find(
+                            './/sourcename') is not None else '',
+                        'datadesc': dataitem.find('.//datadesc').text if dataitem.find(
+                            './/datadesc') is not None else '',
+                        # 'cdndataurl': dataitem.find('.//cdndataurl').text if dataitem.find('.//cdndataurl') is not None else '',
+                        # 'sourceheadurl': dataitem.find('.//sourceheadurl').text if dataitem.find('.//sourceheadurl') is not None else '',
+                        # 'fullmd5': dataitem.find('.//fullmd5').text if dataitem.find('.//fullmd5') is not None else ''
+                    }
+                    # 将提取的信息添加到images_info列表中
+                    images_info.append(image_info)
+
+                # 构建JSON结构
+                message_info = {
+                    'title': title,
+                    'message_type': message_type,
+                    'from_username': from_username,
+                    'image_infos': images_info
+                }
+
+                # 将结果转换为JSON字符串
+                json_result = json.dumps(message_info, ensure_ascii=False, indent=2)
+
+                return  message_info
             return {'message_type': message_type, 'info': '未知消息类型'}
 
     def load_contact(self):
