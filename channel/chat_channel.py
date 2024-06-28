@@ -107,6 +107,7 @@ class ChatChannel(Channel):
             context = e_context["context"]
             # 如果插件处理了事件，并且决定传递，或者context为None，返回context
             if e_context.is_pass() or context is None:
+                logger.debug(f"插件返回BREAK_PASS e_context={e_context}")
                 return context
             # 如果消息来自机器人自己，并且不允许触发自身消息，返回None
 
@@ -186,6 +187,7 @@ class ChatChannel(Channel):
                     # 如果源消息是私聊的语音消息,XML，允许不匹配前缀，放宽条件
                     pass
                 else:
+                    logger.debug("[WX] 单聊不匹配前缀single_chat_prefix {}".format(context.content))
                     return None
 
             content = content.strip()
