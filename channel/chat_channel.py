@@ -167,6 +167,7 @@ class ChatChannel(Channel):
                 if not flag:
                     if context["origin_ctype"] == ContextType.VOICE:
                         logger.info("[WX]receive group voice, but checkprefix didn't match")
+                    logger.info("不匹配群前缀，非语音消息！")
                     return None
             else:  # 单聊
                 nick_name = context["msg"].from_user_nickname
