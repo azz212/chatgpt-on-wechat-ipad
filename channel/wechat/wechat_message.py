@@ -77,7 +77,7 @@ class WechatMessage(ChatMessage):
 
                 # 这里只能得到nickname， actual_user_id还是机器人的id
                 self.ctype = ContextType.LINK
-                self.content = result["image_infos"] # 内容 list
+                self.content = json.dumps(result["image_infos"]) # 内容 list
             elif "你已添加了" in itchat_msg["msg"]:  #通过好友请求
                 self.ctype = ContextType.ACCEPT_FRIEND
                 self.content = itchat_msg["msg"]
@@ -345,7 +345,8 @@ class WechatMessage(ChatMessage):
             # 提取关键信息
             title = root.find('.//title').text if root.find('.//title') is not None else ''
             message_type = root.find('.//type').text if root.find('.//type') is not None else ''
-
+            if message_type.isdigit():
+                message_type = int(message_type)
             if title =='群聊的聊天记录' and message_type ==19:
                 from_username = root.find('.//fromusername').text if root.find('.//fromusername') is not None else ''
                 # 提取图片信息

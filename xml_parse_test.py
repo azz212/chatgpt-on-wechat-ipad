@@ -306,6 +306,32 @@ xml_data_groupchat_content = '''
 	<commenturl />
 </msg>
 '''
+xml_data_groupchat_content2 = '''
+<msg>
+	<appmsg>
+		<title>群聊的聊天记录</title>
+		<des>帅哥-）: @🌙 周星星🌙(管理)
+你好！有什么可以帮助你的吗？
+大辉辉: &gt;KFC
+帅哥-）: @大辉辉
+吵什么吵，就这么一点事。今天我们大家之所以欢聚在这里，是为我们从小到大的好朋友肯德基 ，庆祝他的星期四
+大辉辉: &gt;KFC
+大辉辉: &gt;看图猜成语...</des>
+		<action>view</action>
+		<type>19</type>
+		<url>https://support.weixin.qq.com/cgi-bin/mmsupport-bin/readtemplate?t=page/favorite_record__w_unsupport&amp;from=singlemessage&amp;isappinstalled=0</url>
+		<recorditem><![CDATA[<recordinfo><title>群聊的聊天记录</title><desc>帅哥-）:&#x20;@🌙&#x20;周星星🌙(管理)&#x0A;你好！有什么可以帮助你的吗？&#x0A;大辉辉:&#x20;&gt;KFC&#x0A;帅哥-）:&#x20;@大辉辉&#x0A;吵什么吵，就这么一点事。今天我们大家之所以欢聚在这里，是为我们从小到大的好朋友肯德基&#x20;，庆祝他的星期四&#x0A;大辉辉:&#x20;&gt;KFC&#x0A;大辉辉:&#x20;&gt;看图猜成语...</desc><datalist count="5"><dataitem datatype="1" datasourceid="6979062621926085042"><datadesc>@🌙&#x20;周星星🌙(管理)&#x0A;你好！有什么可以帮助你的吗？</datadesc><sourcename>帅哥-）</sourcename><sourceheadurl>https://wx.qlogo.cn/mmhead/ver_1/FwBkrzxbpk2kE0VkuoWoBs4nau1CIEMibvyIMeOWdg3lXoh6OI4IcEgtAfqZBpuIuVia0Pr9nn8dokdTpL6eL2pl88mryNG3kqmQUa9ftSEEI/96</sourceheadurl><sourcetime>2024-06-28&#x20;23:35:44</sourcetime><srcMsgCreateTime>1719588944</srcMsgCreateTime><fromnewmsgid>6979062621926085042</fromnewmsgid><dataitemsource><hashusername>f73f7d69cf58afce3512f24aa9c2b107c0e7ed01b9b598a469944caaf84517e6</hashusername></dataitemsource></dataitem><dataitem datatype="1" datasourceid="2338851685868581048"><datadesc>&gt;KFC</datadesc><sourcename>大辉辉</sourcename><sourceheadurl>https://wx.qlogo.cn/mmhead/ver_1/3hWJ41nBHJwWj1GzKg2vwUIo6ffibBx4tra1rN05VSRq0sWsTbNOEiauQsEuKOwWR0cqAItr4RqU7gGibjPr6n26mpNbDnMLcMicI1Zcbic5uibA0/132</sourceheadurl><sourcetime>2024-06-28&#x20;23:35:54</sourcetime><srcMsgCreateTime>1719588954</srcMsgCreateTime><fromnewmsgid>2338851685868581048</fromnewmsgid><dataitemsource><hashusername>e61739c6bed993dc6aa8b03e1ea9ecb4e188358a76d124dc7182b38a313d9f8f</hashusername></dataitemsource></dataitem><dataitem datatype="1" datasourceid="5934468034218630684"><datadesc>@大辉辉&#x0A;吵什么吵，就这么一点事。今天我们大家之所以欢聚在这里，是为我们从小到大的好朋友肯德基&#x20;，庆祝他的星期四</datadesc><sourcename>帅哥-）</sourcename><sourceheadurl>https://wx.qlogo.cn/mmhead/ver_1/FwBkrzxbpk2kE0VkuoWoBs4nau1CIEMibvyIMeOWdg3lXoh6OI4IcEgtAfqZBpuIuVia0Pr9nn8dokdTpL6eL2pl88mryNG3kqmQUa9ftSEEI/96</sourceheadurl><sourcetime>2024-06-28&#x20;23:35:57</sourcetime><srcMsgCreateTime>1719588957</srcMsgCreateTime><fromnewmsgid>5934468034218630684</fromnewmsgid><dataitemsource><hashusername>f73f7d69cf58afce3512f24aa9c2b107c0e7ed01b9b598a469944caaf84517e6</hashusername></dataitemsource></dataitem><dataitem datatype="1" datasourceid="8172407547949143523"><datadesc>&gt;KFC</datadesc><sourcename>大辉辉</sourcename><sourceheadurl>https://wx.qlogo.cn/mmhead/ver_1/3hWJ41nBHJwWj1GzKg2vwUIo6ffibBx4tra1rN05VSRq0sWsTbNOEiauQsEuKOwWR0cqAItr4RqU7gGibjPr6n26mpNbDnMLcMicI1Zcbic5uibA0/132</sourceheadurl><sourcetime>2024-06-28&#x20;23:40:12</sourcetime><srcMsgCreateTime>1719589212</srcMsgCreateTime><fromnewmsgid>8172407547949143523</fromnewmsgid><dataitemsource><hashusername>e61739c6bed993dc6aa8b03e1ea9ecb4e188358a76d124dc7182b38a313d9f8f</hashusername></dataitemsource></dataitem><dataitem datatype="1" datasourceid="2940445862725204673"><datadesc>&gt;看图猜成语</datadesc><sourcename>大辉辉</sourcename><sourceheadurl>https://wx.qlogo.cn/mmhead/ver_1/3hWJ41nBHJwWj1GzKg2vwUIo6ffibBx4tra1rN05VSRq0sWsTbNOEiauQsEuKOwWR0cqAItr4RqU7gGibjPr6n26mpNbDnMLcMicI1Zcbic5uibA0/132</sourceheadurl><sourcetime>2024-06-28&#x20;23:40:39</sourcetime><srcMsgCreateTime>1719589239</srcMsgCreateTime><fromnewmsgid>2940445862725204673</fromnewmsgid><dataitemsource><hashusername>e61739c6bed993dc6aa8b03e1ea9ecb4e188358a76d124dc7182b38a313d9f8f</hashusername></dataitemsource></dataitem></datalist><favcreatetime>1719591294759</favcreatetime></recordinfo>]]></recorditem>
+		<appattach />
+	</appmsg>
+	<fromusername>wxid_gqhxp9ipfxv222</fromusername>
+	<scene>0</scene>
+	<appinfo>
+		<version>1</version>
+		<appname></appname>
+	</appinfo>
+	<commenturl></commenturl>
+</msg>
+'''
 
 def parse_wechat_message(xml_data):
     def get_member_info(member_element):
@@ -461,6 +487,6 @@ def parse_wechat_message(xml_data):
 
 
 # 调用函数并打印结果
-parsed_message = parse_wechat_message(xml_data_refer)
+parsed_message = parse_wechat_message(xml_data_groupchat_content2)
 print(parsed_message)
 #print(f"{parsed_message['inviter_username']['nickname']} 邀请 {parsed_message['joiners_usernames'][0]['nickname'] } 加入了群聊!")

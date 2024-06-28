@@ -278,6 +278,8 @@ class ChatChannel(Channel):
                 pass
             elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
                 pass
+            elif context.type == ContextType.LINK :
+                pass
             else:
                 logger.warning("[WX] unknown context type: {}".format(context.type))
                 return
