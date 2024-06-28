@@ -329,7 +329,7 @@ class WechatMessage(ChatMessage):
                     'fromusr': fromusr,
                     'chatusr': chatusr,
                     'displayname': displayname,
-                    'content': content
+                    'content': content.strip()
                 }
             })
             # 输出提取的信息
@@ -339,7 +339,7 @@ class WechatMessage(ChatMessage):
             logger.info(f"发送人: {fromusr}")
             logger.info(f"聊天群: {chatusr}")
             logger.info(f"显示名: {displayname}")
-            logger.info(f"消息内容: {content}")
+            logger.info(f"引用消息: {content}")
             return message_info
         else:
             # 提取关键信息

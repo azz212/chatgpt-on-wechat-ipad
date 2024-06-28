@@ -197,6 +197,8 @@ class WechatChannel(ChatChannel):
         context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg)
         if context:
             self.produce(context)
+        else:
+            logger.debug("本次context返回为空，不放入队列")
     def upload_pic(self,local_file,upload_url):
         '''
         '{"url":"https://openai-75050.gzc.vod.tencent-cloud.com/openaiassets_14eb211d797ccdf33edc19839a7bcbcc_2579861717036942746.jpg","filekey":"openaiassets_14eb211d797ccdf33edc19839a7bcbcc_2579861717036942746.jpg"}'
