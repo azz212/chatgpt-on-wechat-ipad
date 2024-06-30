@@ -64,7 +64,7 @@ class Hello(Plugin):
                 return
             e_context["context"].type = ContextType.TEXT
             e_context["context"].content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
-            e_context.action = EventAction.BREAK  # 事件结束，进入默认处理逻辑
+            e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
             if not self.config or not self.config.get("use_character_desc"):
                 e_context["context"]["generate_breaked_by"] = EventAction.BREAK_PASS
 
