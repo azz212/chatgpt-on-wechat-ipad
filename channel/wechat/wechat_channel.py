@@ -5,9 +5,7 @@ wechat channel
 """
 
 import io
-import json
-import os
-import threading
+
 import time
 
 import requests
@@ -15,31 +13,15 @@ import requests
 from bridge.context import *
 from bridge.reply import *
 from channel.chat_channel import ChatChannel
-from channel import chat_channel
 from channel.wechat.wechat_message import *
 from common.expired_dict import ExpiredDict
 from common.log import logger
 from common.singleton import singleton
 from common.time_check import time_checker
 from config import conf, get_appdata_dir
-#from lib import itchat
-#from lib.itchat.content import *
-from flask import Flask, request, jsonify
-
-from quart import Quart, request, Response
-
-from quart import Quart, request, jsonify,render_template,send_file
 
 from channel.wechat.iPadWx import iPadWx
-import random
-import concurrent.futures
-import asyncio
 
-#from app import quart_app
-#max_worker = 5
-
-#
-# app = Flask(__name__)
 @singleton
 class WechatChannel(ChatChannel):
     NOT_SUPPORT_REPLYTYPE = []
@@ -320,145 +302,6 @@ class WechatChannel(ChatChannel):
             logger.info("[WX] sendCARD={}, receiver={}".format(reply.content, receiver))
 
         # 统一的发送函数，每个Channel自行实现，根据reply的type字段发送不同类型的消息
-    def send_human(self, reply: Reply, context: Context):
-        # global mood
-        receiver = context["receiver"]
-        if reply.type == ReplyType.TEXT:
-            random.seed(time.time())  # 不写这句的话后边随机数总是生成出0，不懂
-
-            """
-            角色描述和roleplay插件的猫娘大同小异，但是多了以下部分：「%情感%就是你对话时的情感，放在两个%之间，
-            有以下七种情况：%无语%、%惊讶%、%难过%、%愉快%、%疑惑%、%安慰%、%害羞%」，配合猫娘自带的格式使用
-            """
-
-            mood_mapping = {
-                "%愉快%": "joy",
-                "%难过%": "sad",
-                "%无语%": "speechless",
-                "%惊讶%": "surprised",
-                "%疑惑%": "doubt",
-                "%安慰%": "comfort",
-                "%害羞%": "shy",
-                "%关心%": "careful",
-                "%爱你%": "love",
-                "%担忧%": "worry",
-
-            }
-
-            '''处理一下最开始的文本reply.content，万一出来一个%开心%，我的mood_mapping里面没有，
-            就先把%开心%去掉，然后再进行下面的步骤。
-            具体的手段是先检测reply.content里面有没有%char%这种结构，如果有就判断是不是mood_mapping
-            里面的这几个，如果不是就把%char%去掉,或者换成（开心）
-            '''
-            # 创建一个正则表达式模式匹配%char%
-            pattern_first = re.compile(r'%\w+%')
-
-            # 移除所有不在mood_mapping中的%char%
-            reply.content = pattern_first.sub(
-                lambda match: match.group() if match.group() in mood_mapping else f'({match.group()[1:-1]})',
-                reply.content)
-
-            reply.content = reply.content.replace("\n", "").replace("\r", "").strip()  # 清除大段文字中 GPT 式的换行和空行
-            # 分割標點符號
-            split_punc = ['。', '？', '！', '!', '?', '）', '+']
-            rm_punc = ['。', '~']
-            pattern = "(?<=[" + re.escape(''.join(split_punc)) + "])(?![？！（])"  # 在？！（之前不切分
-            split_messages = re.split(pattern, reply.content)
-
-            sticker_sent, i = 0, 0  # sticker_sent 变量限定单次回复内最多发送一次表情包，i 处理发送概率
-            for msg in split_messages:
-                for punc in rm_punc:
-                    msg = msg.replace(punc, "")
-                for keyword, emotion in mood_mapping.items():
-                    if keyword in msg:
-                        mood = emotion
-                        msg = msg.replace(keyword, "")
-                        i = 1
-                        break
-                    else:
-                        mood = False
-                if msg != "" and msg != "+":
-                    # 这里能不能根据消息的长度控制停顿的时间，如果消息长度比较长就停顿时间比较长，长度比较短就回复的快
-                    # 计算消息的长度，然后根据长度设置停顿时间
-                    # 面向结果编程,让他更加像人
-                    if msg != "这个问题我还没有学会，请问我其它问题吧":
-                        delay_time = len(msg) / 7  # 假设每5个字符停顿1秒，可以根据需要调整这个比例
-                        itchat.send(msg, toUserName=receiver)
-                        time.sleep(delay_time)  # 停顿相应的时间
-                        logger.info("[WX] sendMsg={}, receiver={}".format(msg, receiver))
-                    else:
-                        itchat.send('主人，只要是你说的我都听~', toUserName=receiver)
-                        logger.info("[WX] sendMsg={}, receiver={}".format(msg, receiver))
-                    # itchat.send(msg, toUserName=receiver)
-                    # logger.info("[WX] sendMsg={}, receiver={}".format(msg, receiver))
-                    # time.sleep(0.5) #每次发消息停顿0.5秒
-
-                if mood and i == 1 and sticker_sent == 0:  # 有情感，判定为发送，且未发送过
-                    image_directory = os.path.join('resources', 'stickers', mood)
-                    image_files = [file for file in os.listdir(image_directory) if
-                                   os.path.isfile(os.path.join(image_directory, file))]
-                    image_file = random.choice(image_files)
-                    image_path = os.path.join(image_directory, image_file)
-                    print(image_path)
-                    image_reply = Reply(ReplyType.IMAGE, image_path)
-                    self.send(image_reply, context)
-                    sticker_sent = 1  # 限定一次回复中最多发送一张表情包
-                    time.sleep(2)  # 如果发送表情就多停顿1秒
-
-        elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
-            itchat.send(reply.content, toUserName=receiver)
-            logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
-        elif reply.type == ReplyType.VOICE:
-            itchat.send_file(reply.content, toUserName=receiver)
-            logger.info("[WX] sendFile={}, receiver={}".format(reply.content, receiver))
-        elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
-            img_url = reply.content
-            logger.debug(f"[WX] start download image, img_url={img_url}")
-            pic_res = requests.get(img_url, stream=True)
-            image_storage = io.BytesIO()
-            size = 0
-            for block in pic_res.iter_content(1024):
-                size += len(block)
-                image_storage.write(block)
-            logger.info(f"[WX] download image success, size={size}, img_url={img_url}")
-            image_storage.seek(0)
-            itchat.send_image(image_storage, toUserName=receiver)
-            logger.info("[WX] sendImage url={}, receiver={}".format(img_url, receiver))
-        elif reply.type == ReplyType.IMAGE:  # 从文件读取图片
-            # image_storage = reply.content
-            # 打开文件，以二进制模式（'rb'）
-            with open(reply.content, 'rb') as image_file:
-                # 现在image_file是一个文件对象，可以进行读取操作
-                image_storage = image_file.read()
-
-            # 如果需要，你可以使用BytesIO将文件内容转换为内存中的文件对象
-            # 这在不需要保持文件打开的情况下很有用，例如在上传到云存储或发送时
-            memory_file = io.BytesIO(image_storage)
-            memory_file.seek(0)
-            itchat.send_image(memory_file, toUserName=receiver)
-            logger.info("[WX] sendImage, receiver={}".format(receiver))
-        elif reply.type == ReplyType.FILE:  # 新增文件回复类型
-            file_storage = reply.content
-            itchat.send_file(file_storage, toUserName=receiver)
-            logger.info("[WX] sendFile, receiver={}".format(receiver))
-        elif reply.type == ReplyType.VIDEO:  # 新增视频回复类型
-            video_storage = reply.content
-            itchat.send_video(video_storage, toUserName=receiver)
-            logger.info("[WX] sendFile, receiver={}".format(receiver))
-        elif reply.type == ReplyType.VIDEO_URL:  # 新增视频URL回复类型
-            video_url = reply.content
-            logger.debug(f"[WX] start download video, video_url={video_url}")
-            video_res = requests.get(video_url, stream=True)
-            video_storage = io.BytesIO()
-            size = 0
-            for block in video_res.iter_content(1024):
-                size += len(block)
-                video_storage.write(block)
-            logger.info(f"[WX] download video success, size={size}, video_url={video_url}")
-            video_storage.seek(0)
-            #itchat.send_video(video_storage, toUserName=receiver)
-            logger.info("[WX] sendVideo url={}, receiver={}".format(video_url, receiver))
-
 
 #ch = WechatChannel()
 class WechatPadChannel:

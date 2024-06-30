@@ -6,6 +6,7 @@ import json
 import os
 import re
 from aligo import Aligo,set_config_folder
+from common.log import logger
 def login_ali():
     set_config_folder('plugins/neteasy')
     ali = Aligo(name="zhao_config")  # 第一次使用，会弹出二维码，供扫描登录
@@ -41,10 +42,9 @@ def downloadneteasy(url):
     try:
         ret=s.get(url)
         ret_json = ret.json()
-
+        logger.info(ret_json)
     except Exception as e:
-        print('not json data')
-
+        logger.info('not json data')
         print(ret.content)
         return None
 
@@ -214,6 +214,7 @@ def download_163news(message):
     if videourl!='':
         ret_json = downloadneteasy(videourl)
         if ret_json != None:
+
             title = ret_json['data']['title']
             mp4_url = ret_json['data']['mp4_url']
             m3u8_url = ret_json['data']['m3u8_url']
