@@ -22,7 +22,7 @@
 ## 社区
 
 开源项目交流群：
-![](D:\pysrc\wechatbot\chatgpt-on-wechat-ipad\docs\images\contact.jpg)
+![](docs\images\contact.jpg)
 
 
 
