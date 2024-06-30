@@ -1,37 +1,74 @@
 {
   "channel_type": "wx",
-  "model": "",
-  "open_ai_api_key": "YOUR API KEY",
+  "model": "gpt-4o",
+  "open_ai_api_key": "",
+  "open_ai_api_base": "http://xx.xx.xx/v1",
+  "open_ai_api_base2": "",
+  "open_ai_api_key2": "",
+
   "claude_api_key": "YOUR API KEY",
-  "text_to_image": "dall-e-2",
+  "text_to_image": "dall-e-3",
   "voice_to_text": "openai",
   "text_to_voice": "openai",
   "proxy": "",
   "hot_reload": false,
+  "wechatipad_port": 5712,
+
   "single_chat_prefix": [
-    "bot",
-    "@bot"
+    ">",
+    "#"
   ],
   "single_chat_reply_prefix": "[bot] ",
   "group_chat_prefix": [
-    "@bot"
+    ">"
   ],
   "group_name_white_list": [
-    "ChatGPT测试群",
-    "ChatGPT测试群2"
+    "Chatgpt-ON-iPad"
   ],
   "image_create_prefix": [
     "画"
   ],
+  "plugin_trigger_prefix": "$",
+  "group_chat_keyword": ["总结"],
   "speech_recognition": true,
   "group_speech_recognition": false,
   "voice_reply_voice": false,
-  "conversation_max_tokens": 2500,
-  "expires_in_seconds": 3600,
-  "character_desc": "你是基于大语言模型的AI智能助手，旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。",
+  "conversation_max_tokens": 5000,
+  "expires_in_seconds": 60,
+  "character_desc": "",
   "temperature": 0.7,
   "subscribe_msg": "感谢您的关注！\n这里是AI智能助手，可以自由对话。\n支持语音对话。\n支持图片输入。\n支持图片输出，画字开头的消息将按要求创作图片。\n支持tool、角色扮演和文字冒险等丰富的插件。\n输入{trigger_prefix}#help 查看详细指令。",
   "use_linkai": false,
   "linkai_api_key": "",
-  "linkai_app_code": ""
+  "linkai_app_code": "",
+
+  "wechatcom_corp_id": "",
+  "wechatcomapp_token": "",
+  "wechatcomapp_port": 5712,
+  "wechatcomapp_secret": "",
+  "wechatcomapp_agent_id": "",
+  "wechatcomapp_aes_key": "",
+
+  "feishu_port": 5712,
+  "feishu_app_id": "",
+  "feishu_app_secret": "",
+  "feishu_token": "",
+  "feishu_bot_name": "",
+  "debug": true,
+
+  "baidu_wenxin_model": "ernie-speed-128k",
+  "baidu_wenxin_api_key": "",
+  "baidu_wenxin_secret_key": "",
+
+  "xunfei_app_id": "",
+  "xunfei_api_key": "",
+  "xunfei_api_secret": "",
+  "base_url": " http://xxx/api",
+  "auth_account": "",
+  "auth_password": "",
+
+  "token": "bf782400-381b-xxx",
+  "auth": "",
+  "test":1,
+  "http_hook":""
 }

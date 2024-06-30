@@ -23,10 +23,10 @@ available_setting = {
     "azure_deployment_id": "",  # azure 模型部署名称
     "azure_api_version": "",  # azure api版本
     # Bot触发配置
-    "single_chat_prefix": ["bot", "@bot"],  # 私聊时文本需要包含该前缀才能触发机器人回复
+    "single_chat_prefix": [">", "@bot"],  # 私聊时文本需要包含该前缀才能触发机器人回复
     "single_chat_reply_prefix": "[bot] ",  # 私聊时自动回复的前缀，用于区分真人
     "single_chat_reply_suffix": "",  # 私聊时自动回复的后缀，\n 可以换行
-    "group_chat_prefix": ["@"],  # 群聊时包含该前缀则会触发机器人回复
+    "group_chat_prefix": [">"],  # 群聊时包含该前缀则会触发机器人回复
     "group_chat_reply_prefix": "",  # 群聊时自动回复的前缀
     "group_chat_reply_suffix": "",  # 群聊时自动回复的后缀，\n 可以换行
     "group_chat_keyword": [],  # 群聊时包含该关键词则会触发机器人回复
@@ -60,8 +60,8 @@ available_setting = {
     "timeout": 120,  # chatgpt重试超时时间，在这个时间内，将会自动重试
     # Baidu 文心一言参数
     "baidu_wenxin_model": "eb-instant",  # 默认使用ERNIE-Bot-turbo模型
-    "baidu_wenxin_api_key": "a8SCuSa0i74lAsRmJj6qhtyI",  # Baidu api key
-    "baidu_wenxin_secret_key": "ccAys30jBeBLCXJmH4uaGu42x1loiqHw",  # Baidu secret key
+    "baidu_wenxin_api_key": "",  # Baidu api key
+    "baidu_wenxin_secret_key": "",  # Baidu secret key
     # 讯飞星火API
     "xunfei_app_id": "",  # 讯飞应用ID
     "xunfei_api_key": "",  # 讯飞 API key
@@ -167,14 +167,14 @@ available_setting = {
     "linkai_api_key": "",
     "linkai_app_code": "",
     "linkai_api_base": "https://api.link-ai.tech",  # linkAI服务地址
-    "base_url": " http://203.3.115.223:22277/api",
-    "auth_account": "17612873959",
-    "auth_password": "b7b8d32aaa229d3393ca9a831dcdccfbbef4818f36e0f26922786019d31d8095",
+    "base_url": " ",# ipad 服务器地址
+    "auth_account": "",
+    "auth_password": "",
 
-    "token": "bf782400-381b-4731-9dee-44f2129158d3",
-    "auth": "eyJpdiI6IjZtd2lheTUwelBKU0l3RC9DMEtRK1E9PSIsInZhbHVlIjoiTVZZUGF0UXJQcGJBMENpVUh6YmdiQT09IiwibWFjIjoiMjQ4NjFiMDg5OWIzNmE3ZTdhYWU5NWJmOTE1NmIwZjk1N2IwN2VkYmE5N2ExNzk2ZTljYWFkNzlhNThhZmM4OSIsInRhZyI6IiJ9",
+    "token": "",
+    "auth": "",
     "test": 1,
-    "http_hook":"http://www.hdgame.top:5711/chat"
+    "http_hook":"http://XXXX:port/chat"#本地的回调地址，用于ipda服务器http回调
 }
 
 

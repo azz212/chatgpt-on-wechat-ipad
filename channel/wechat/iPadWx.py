@@ -7,6 +7,14 @@ from config import conf
 import os
 from common.log import logger
 class iPadWx:
+    '''
+    获取步骤：
+    第一步：获取授权码(vx rongdhui)
+    第二步：领取一个机器人(单账号只能领取一次)
+    第三步：获取登录二维码（准备好第四步再调用）
+    第四步：确定已登录（确保扫码后调用）
+    第五步：将auth_account和auth_password 填入config.json 文件
+    '''
     shared_wx_contact_list = {}
     function_called = False
 
