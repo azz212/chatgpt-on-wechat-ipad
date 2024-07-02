@@ -70,7 +70,8 @@ class WechatChannel(ChatChannel):
                         need_save=True
                     else:
                         room_info = self.bot.get_room_info(room_id)
-                        print(room_info)
+                        time.sleep(2)
+                        #print(room_info)
                         chatroom_name = room_info['data']['nickName']
                         if iPadWx.shared_wx_contact_list[room_id]['nickName']!=chatroom_name:
                             need_save =True
