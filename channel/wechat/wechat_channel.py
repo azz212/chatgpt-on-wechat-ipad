@@ -68,6 +68,16 @@ class WechatChannel(ChatChannel):
                         iPadWx.shared_wx_contact_list[room_id]['chatRoomMembers'] = members['data']
                         logger.info(f"群还未查询过{room_id},名称{room_info['data']['nickName']}")
                         need_save=True
+                    else:
+                        room_info = self.bot.get_room_info(room_id)
+                        print(room_info)
+                        chatroom_name = room_info['data']['nickName']
+                        if iPadWx.shared_wx_contact_list[room_id]['nickName']!=chatroom_name:
+                            need_save =True
+                            iPadWx.shared_wx_contact_list[room_id]['nickName'] = chatroom_name
+
+
+
                 if need_save:
                     self.bot.save_contact()
 

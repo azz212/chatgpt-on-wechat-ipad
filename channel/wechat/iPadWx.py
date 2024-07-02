@@ -77,7 +77,7 @@ class iPadWx:
 
     def save_contact(self):
 
-        json.dump(iPadWx.shared_wx_contact_list,open("contact.json",'w',encoding='utf-8'))
+        json.dump(iPadWx.shared_wx_contact_list,open("contact.json",'w',encoding='utf-8'),ensure_ascii=False)
         logger.info(f"保存联系人!{iPadWx.shared_wx_contact_list}")
 
 
