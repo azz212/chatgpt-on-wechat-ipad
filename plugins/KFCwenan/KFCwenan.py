@@ -5,10 +5,12 @@ from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from common.log import logger
 
-BASE_URL_DM = "https://api.pearktrue.cn/api/kfc"
+#BASE_URL_DM = "https://api.pearktrue.cn/api/kfc"
+BASE_URL_DM = "https://api.beiyu.vip/api/"
+
 
 @plugins.register(name="KFCwenan",
-                  desc="疯狂星期四文案",
+                  desc="疯狂星期四文案,舔狗文案，关键字{KFC，舔狗}",
                   version="1.0",
                   author="Cool",
                   desire_priority=100)
@@ -21,7 +23,7 @@ class KFCwenan(Plugin):
         logger.info(f"[{__class__.__name__}] inited")
 
     def get_help_text(self, **kwargs):
-        help_text = f"发送【KFC】获取疯狂星期四文案"
+        help_text = f"发送【KFC】获取疯狂星期四文案,发送【舔狗】"
         return help_text
 
     def on_handle_context(self, e_context: EventContext):
@@ -29,10 +31,11 @@ class KFCwenan(Plugin):
             return
         self.content = e_context["context"].content.strip()
 
-        if self.content == "KFC":
+        if self.content.lower() == "kfc":
             logger.info(f"[{__class__.__name__}] 收到消息: {self.content}")
             reply = Reply()
-            result = self.KFCwenan()
+            url = BASE_URL_DM +"kfc"
+            result = self.KFCwenan(url)
             if result is not None:
                 reply.type = ReplyType.TEXT
                 reply.content = result
@@ -43,9 +46,23 @@ class KFCwenan(Plugin):
                 reply.content = "获取失败,等待修复⌛️"
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
-
-    def KFCwenan(self):
-        url = BASE_URL_DM
+        elif self.content.lower() == "舔狗":
+            url = BASE_URL_DM + "dog"
+            logger.info(f"[{__class__.__name__}] 收到消息: {self.content}")
+            reply = Reply()
+            result = self.KFCwenan(url)
+            if result is not None:
+                reply.type = ReplyType.TEXT
+                reply.content = result
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+            else:
+                reply.type = ReplyType.ERROR
+                reply.content = "获取失败,等待修复⌛️"
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+    def KFCwenan(self,url):
+        #url = BASE_URL_DM
         params = {"type": "json"}
         headers = {'Content-Type': "application/x-www-form-urlencoded"}
         try:
