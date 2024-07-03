@@ -9,7 +9,7 @@
 import uuid
 
 import requests
-
+import web
 from channel.feishu.feishu_message import FeishuMessage
 from bridge.context import Context
 from bridge.reply import Reply, ReplyType
@@ -22,8 +22,6 @@ from channel.chat_channel import ChatChannel, check_prefix
 from common import utils
 import json
 import os
-from channel.wechat.wechat_message import *
-
 
 URL_VERIFICATION = "url_verification"
 
@@ -42,14 +40,14 @@ class FeiShuChanel(ChatChannel):
             self.feishu_app_id, self.feishu_app_secret, self.feishu_token))
         # 无需群校验和前缀
         conf()["group_name_white_list"] = ["ALL_GROUP"]
-        conf()["single_chat_prefix"] = []
+        conf()["single_chat_prefix"] = [""]
 
     def startup(self):
         urls = (
-            '/chat', 'channel.feishu.feishu_channel.FeishuController'
+            '/', 'channel.feishu.feishu_channel.FeishuController'
         )
         app = web.application(urls, globals(), autoreload=False)
-        port = conf().get("feishu_port", 5711)
+        port = conf().get("feishu_port", 9891)
         web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", port))
 
     def send(self, reply: Reply, context: Context):
@@ -151,7 +149,7 @@ class FeishuController:
     # 类常量
     FAILED_MSG = '{"success": false}'
     SUCCESS_MSG = '{"success": true}'
-    MESSAGE_RECEIVE_TYPE = "8001"
+    MESSAGE_RECEIVE_TYPE = "im.message.receive_v1"
 
     def GET(self):
         return "Feishu service start success!"
@@ -164,49 +162,60 @@ class FeishuController:
             logger.debug(f"[FeiShu] receive request: {request}")
 
             # 1.事件订阅回调验证
-            # if request.get("type") == URL_VERIFICATION:
-            #     varify_res = {"challenge": request.get("challenge")}
-            #     return json.dumps(varify_res)
+            if request.get("type") == URL_VERIFICATION:
+                varify_res = {"challenge": request.get("challenge")}
+                return json.dumps(varify_res)
 
             # 2.消息接收处理
             # token 校验
-            header = request.geret("header")
-            # if not header or header.get("token") != channel.feishu_token:
-            #     return self.FAILED_MSG
+            header = request.get("header")
+            if not header or header.get("token") != channel.feishu_token:
+                return self.FAILED_MSG
 
             # 处理消息事件
-            room = request.get("room_id")  # 获取消息来自的群聊. 如果消息不是来自群聊, 则返回None
-            isgroup = room is not None
-            ctype = request.get('type')
+            event = request.get("event")
+            if header.get("event_type") == self.MESSAGE_RECEIVE_TYPE and event:
+                if not event.get("message") or not event.get("sender"):
+                    logger.warning(f"[FeiShu] invalid message, msg={request}")
+                    return self.FAILED_MSG
+                msg = event.get("message")
 
-            event = request.get("type")
+                # 幂等判断
+                if channel.receivedMsgs.get(msg.get("message_id")):
+                    logger.warning(f"[FeiShu] repeat msg filtered, event_id={header.get('event_id')}")
+                    return self.SUCCESS_MSG
+                channel.receivedMsgs[msg.get("message_id")] = True
 
-            try:
-                cmsg = WechatMessage(msg, True)
-            except NotImplementedError as e:
-                logger.debug("[WX]group message {} skipped: {}".format(msg["MsgId"], e))
-                return None
-            WechatChannel().handle_group(cmsg)
+                is_group = False
+                chat_type = msg.get("chat_type")
+                if chat_type == "group":
+                    if not msg.get("mentions") and msg.get("message_type") == "text":
+                        # 群聊中未@不响应
+                        return self.SUCCESS_MSG
+                    if msg.get("mentions")[0].get("name") != conf().get("feishu_bot_name") and msg.get("message_type") == "text":
+                        # 不是@机器人，不响应
+                        return self.SUCCESS_MSG
+                    # 群聊
+                    is_group = True
+                    receive_id_type = "chat_id"
+                elif chat_type == "p2p":
+                    receive_id_type = "open_id"
+                else:
+                    logger.warning("[FeiShu] message ignore")
+                    return self.SUCCESS_MSG
+                # 构造飞书消息对象
+                feishu_msg = FeishuMessage(event, is_group=is_group, access_token=channel.fetch_access_token())
+                if not feishu_msg:
+                    return self.SUCCESS_MSG
 
-            if cmsg.ctype == ContextType.VOICE:
-                if conf().get("group_speech_recognition") != True:
-                    return
-                logger.debug("[WX]receive voice for group msg: {}".format(cmsg.content))
-            elif cmsg.ctype == ContextType.IMAGE:
-                logger.debug("[WX]receive image for group msg: {}".format(cmsg.content))
-            elif cmsg.ctype in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.ACCEPT_FRIEND,
-                                ContextType.EXIT_GROUP]:
-                logger.debug("[WX]receive note msg: {}".format(cmsg.content))
-            elif cmsg.ctype == ContextType.TEXT:
-                # logger.debug("[WX]receive group msg: {}, cmsg={}".format(json.dumps(cmsg._rawmsg, ensure_ascii=False), cmsg))
-                pass
-            elif cmsg.ctype == ContextType.FILE:
-                logger.debug(f"[WX]receive attachment msg, file_name={cmsg.content}")
-            else:
-                logger.debug("[WX]receive group msg: {}".format(cmsg.content))
-            context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=True, msg=cmsg)
-            if context:
-                self.produce(context)
+                context = self._compose_context(
+                    feishu_msg.ctype,
+                    feishu_msg.content,
+                    isgroup=is_group,
+                    msg=feishu_msg,
+                    receive_id_type=receive_id_type,
+                    no_need_at=True
+                )
                 if context:
                     channel.produce(context)
                 logger.info(f"[FeiShu] query={feishu_msg.content}, type={feishu_msg.ctype}")

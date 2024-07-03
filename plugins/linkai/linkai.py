@@ -1,4 +1,3 @@
-import re
 import plugins
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
@@ -45,7 +44,7 @@ class LinkAI(Plugin):
 
         context = e_context['context']
         if context.type not in [ContextType.TEXT, ContextType.IMAGE, ContextType.IMAGE_CREATE, ContextType.FILE,
-                                ContextType.LINK]:
+                                ContextType.SHARING]:
             # filter content no need solve
             return
 
@@ -70,13 +69,12 @@ class LinkAI(Plugin):
             os.remove(file_path)
             return
 
-        if (context.type == ContextType.LINK and self._is_summary_open(context)) or \
+        if (context.type == ContextType.SHARING and self._is_summary_open(context)) or \
                 (context.type == ContextType.TEXT and self._is_summary_open(context) and LinkSummary().check_url(context.content)):
-            url = re.findall(r"<url>(.*?)<\/url>", context.content)[0]
-            if not LinkSummary().check_url(url):
+            if not LinkSummary().check_url(context.content):
                 return
             _send_info(e_context, "正在为你加速生成摘要，请稍后")
-            res = LinkSummary().summary_url(url)
+            res = LinkSummary().summary_url(context.content)
             if not res:
                 _set_reply_text("因为神秘力量无法获取文章内容，请稍后再试吧~", e_context, level=ReplyType.TEXT)
                 return
@@ -198,7 +196,7 @@ class LinkAI(Plugin):
             return False
         if context.kwargs.get("isgroup") and not self.sum_config.get("group_enabled"):
             return False
-        support_type = self.sum_config.get("type") or ["FILE", "LINK"]
+        support_type = self.sum_config.get("type") or ["FILE", "SHARING"]
         if context.type.name not in support_type and context.type.name != "TEXT":
             return False
         return True

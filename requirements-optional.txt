@@ -11,7 +11,7 @@ edge-tts # edge-tts
 numpy<=1.24.2
 langid # language detect
 elevenlabs==1.0.3 # elevenlabs TTS
-
+broadscope-bailian
 #install plugin
 dulwich
 

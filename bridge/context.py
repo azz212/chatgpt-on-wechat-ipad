@@ -30,6 +30,7 @@ class ContextType(Enum):
     XML = 24
     ACCEPT_FRIEND =25
     MAP =26
+    SHARING = 27  # 分享信息
 
     def __str__(self):
         return self.name
