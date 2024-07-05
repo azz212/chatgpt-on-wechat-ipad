@@ -52,18 +52,22 @@ class Hello(Plugin):
         msg: ChatMessage = e_context["context"]["msg"]
         group_name = msg.other_user_nickname #MODIFY THE value
         if e_context["context"].type == ContextType.JOIN_GROUP:
-            if "group_welcome_msg" in conf() or group_name in self.group_welc_fixed_msg:
+            if "group_welc_prompt" in conf() or group_name in self.group_welc_fixed_msg:
                 reply = Reply()
                 reply.type = ReplyType.TEXT
                 if group_name in self.group_welc_fixed_msg:
                     reply.content = self.group_welc_fixed_msg.get(group_name, "").replace("{nickname}",msg.actual_user_nickname)
                 else:
-                    reply.content = conf().get("group_welcome_msg", "").replace("{nickname}",msg.actual_user_nickname)
+                    reply.content = conf().get("group_welc_prompt", "").replace("{nickname}",msg.actual_user_nickname)
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
                 return
-            e_context["context"].type = ContextType.TEXT
-            e_context["context"].content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
+            reply = Reply()
+            reply.type = ReplyType.TEXT
+            reply.content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
+            e_context["reply"] = reply
+            #e_context["context"].type = ContextType.TEXT
+            #e_context["context"].content = self.group_welc_prompt.format(nickname=msg.actual_user_nickname)
             e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
             if not self.config or not self.config.get("use_character_desc"):
                 e_context["context"]["generate_breaked_by"] = EventAction.BREAK_PASS

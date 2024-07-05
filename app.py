@@ -17,7 +17,7 @@ from channel.wechat.wechat_message import *
 from channel.wechat.wechat_channel import message_handler,WechatChannel
 
 from quart import Quart, request, Response
-
+import traceback
 quart_app = Quart(__name__)
 max_worker = 5
 
@@ -111,7 +111,10 @@ async def chat():
         return Response("Message received", mimetype='text/plain')
 
     except Exception as error:
+        logger.error("".join(traceback.format_exc()))
+        traceback.print_exc()
         logger.error(f"An error occurred: {error}")
+
         return Response(str(error), mimetype='text/plain')
 
 @quart_app.route('/pic/<path:filename>')

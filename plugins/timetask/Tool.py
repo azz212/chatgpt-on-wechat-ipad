@@ -415,6 +415,7 @@ class TimeTaskModel:
         #时间信息
         timeValue = item[2]
         tempTimeStr = ""
+
         if isinstance(timeValue, datetime):
             # 变量是 datetime.time 类型（Excel修改后，openpyxl会自动转换为该类型，本次做修正）
             tempTimeStr = timeValue.strftime("%H:%M:%S")
@@ -428,6 +429,8 @@ class TimeTaskModel:
         #日期
         dayValue = item[3]
         tempDayStr = ""
+
+
         if isinstance(dayValue, datetime):
             # 变量是 datetime.datetime 类型（Excel修改后，openpyxl会自动转换为该类型，本次做修正）
             tempDayStr = dayValue.strftime("%Y-%m-%d")

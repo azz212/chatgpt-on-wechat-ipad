@@ -276,6 +276,9 @@ class ChatChannel(Channel):
                 }
             elif context.type == ContextType.XML:  # 分享信息，当前无默认逻辑
                 pass
+            elif context.type == ContextType.JOIN_GROUP:  # 如果没有入群通知处理
+                logger.warning("[WX]no plugin handle context type: {}".format(context.type))
+                pass
             elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
                 pass
             elif context.type == ContextType.LINK :
