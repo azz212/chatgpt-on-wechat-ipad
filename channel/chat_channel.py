@@ -195,7 +195,8 @@ class ChatChannel(Channel):
             #是否是画画命令
             img_match_prefix = check_prefix(content, conf().get("image_create_prefix"))
             if img_match_prefix:
-                content = content.replace(img_match_prefix, "", 1)
+                #todo 前缀不去掉
+                #content = content.replace(img_match_prefix, "", 1)
                 context.type = ContextType.IMAGE_CREATE
             else:
                 context.type = ContextType.TEXT

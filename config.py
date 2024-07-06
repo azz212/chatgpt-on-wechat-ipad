@@ -19,7 +19,7 @@ available_setting = {
     "open_ai_api_base2": "https://api.openai.com/v1",
     "proxy": "",  # openai使用的代理
     # chatgpt模型， 当use_azure_chatgpt为true时，其名称为Azure上model deployment名称
-    "model": "gpt-3.5-turbo",  # 支持ChatGPT、Claude、Gemini、文心一言、通义千问、Kimi、讯飞星火、智谱、LinkAI等模型，模型具体名称详见common/const.py文件列出的模型
+    "model": "gpt-3.5-turbo" ,  # qwen-max 支持ChatGPT、Claude、Gemini、文心一言、通义千问、Kimi、讯飞星火、智谱、LinkAI等模型，模型具体名称详见common/const.py文件列出的模型
     "bot_type": "",  # 可选配置，使用兼容openai格式的三方服务时候，需填"chatGPT"。bot具体名称详见common/const.py文件列出的bot_type，如不填根据model名称判断，
     "use_azure_chatgpt": False,  # 是否使用azure的chatgpt
     "azure_deployment_id": "",  # azure 模型部署名称
@@ -187,7 +187,10 @@ available_setting = {
     "token": "",
     "auth": "",
     "test": 1,
-    "http_hook":"http://XXXX:port/chat"#本地的回调地址，用于ipda服务器http回调
+    "http_hook":"http://XXXX:port/chat",#本地的回调地址，用于ipda服务器http回调
+    "coze_api_base": "https://api.coze.cn/open_api/v2",
+    "coze_api_key": "这里改成你的coze key",
+    "coze_bot_id": "这里是你的botid",
 }
 
 
