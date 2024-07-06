@@ -11,7 +11,7 @@ protocol = parsed_url.scheme
 domain = parsed_url.netloc.split(':')[0]
 port = parsed_url.netloc.split(':')[1]
 path = parsed_url.path
-#port = '5711'
+port = '5711'
 # 组合
 combined_url = urllib.parse.urlunparse((protocol, domain + ':' + port, path, '', '', ''))
 
