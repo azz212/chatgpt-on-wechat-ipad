@@ -8,9 +8,9 @@
 -  ✅   **插件功能丰富：** 看图猜成语，早报，定时任务，疯狂星期4文案，画图
 -  ✅   **图像能力：** 支持图片生成、图片识别、图生图（如照片修复），可选择 Dall-E-3, stable diffusion, replicate, midjourney, CogView-3, vision模型
 -  ✅   **丰富插件：** 支持个性化插件扩展，已实现多角色切换、文字冒险、敏感词过滤、聊天记录总结、文档总结和对话、联网搜索，看图猜成语，KFC，早报，热榜等非常多的娱乐插件
-![看图猜成语](docs/images/idiom.jpg)
-![kfc](docs/images/kfc.jpg)
-![早报](docs/images/morning.jpg)
+![看图猜成语](docs\images\idiom.jpg)
+![kfc](docs\images\kfc.jpg)
+![早报](docs\images\morning.jpg)
 ## 声明
 
 1. 本项目遵循 [MIT开源协议](/LICENSE)，仅用于技术研究和学习，使用本项目时需遵守所在地法律法规、相关政策以及企业章程，禁止用于任何违法或侵犯他人权益的行为
@@ -21,7 +21,7 @@
 ## 社区
 
 开源项目交流群：
-![交流群图片](docs/images/contact.jpg)
+![交流群图片](docs\images\contact.jpg)
 
 
 
