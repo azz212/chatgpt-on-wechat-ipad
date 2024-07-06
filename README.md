@@ -9,7 +9,7 @@
 -  ✅   **图像能力：** 支持图片生成、图片识别、图生图（如照片修复），可选择 Dall-E-3, stable diffusion, replicate, midjourney, CogView-3, vision模型
 -  ✅   **丰富插件：** 支持个性化插件扩展，已实现多角色切换、文字冒险、敏感词过滤、聊天记录总结、文档总结和对话、联网搜索，看图猜成语，KFC，早报，热榜等非常多的娱乐插件
 ![看图猜成语](docs/images/idiom.jpg)
-![kfc](docs/images/kfc.jpg)
+![kfc](docs/images/KFC.jpg)
 ![早报](docs/images/morning.jpg)
 ## 声明
 
@@ -22,8 +22,6 @@
 
 开源项目交流群：
 ![交流群图片](docs/images/contact.jpg)
-
-
 
 # 🚀 优点
 **无需Windows 系统：**  无需Windows环境，Linux即可，可云服务器挂机
