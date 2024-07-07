@@ -240,7 +240,7 @@ class ChatChannel(Channel):
         reply = e_context["reply"]
         if not e_context.is_pass():
             logger.debug("[WX] ready to handle context: type={}, content={}".format(context.type, context.content))
-            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
+            if context.type  in [ContextType.TEXT ,ContextType.IMAGE_CREATE,ContextType.QUOTE,ContextType.XML ]:  # 文字和图片消息
                 context["channel"] = e_context["channel"]
                 reply = super().build_reply_content(context.content, context)
             elif context.type == ContextType.VOICE:  # 语音消息

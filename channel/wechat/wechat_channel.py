@@ -87,12 +87,12 @@ class WechatChannel(ChatChannel):
                 group_need_monitors = []
                 for group_need_monitor in conf().get("group_name_white_list"):
                     for key,item in iPadWx.shared_wx_contact_list.items():
-                        if item['nickName'] ==group_need_monitor:
+                        if item['nickName'].lower() ==group_need_monitor.lower():
                             group_need_monitors.append(key)
                             break
-                for room_id in groups['data']:
-                    if room_id not in group_need_monitors and len(group_need_monitors)<10:
-                        group_need_monitors.append(room_id)
+                # for room_id in groups['data']:
+                #     if room_id not in group_need_monitors and len(group_need_monitors)<10:
+                #         group_need_monitors.append(room_id)
 
                 not_monitor = set(groups['data']) - set(group_need_monitors)
                 for room_id in list(not_monitor):

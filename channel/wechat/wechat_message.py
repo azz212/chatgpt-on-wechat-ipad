@@ -71,8 +71,24 @@ class WechatMessage(ChatMessage):
                     self.content = result['action']
             elif result['message_type'] =='appmsg' and  result['subtype'] =='reference' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
+                '''
+                {
+                'subtype': 'reference',
+                'title': title,
+                'reference': {
+                    'type': refer_type,
+                    'svrid': svrid,
+                    'fromusr': fromusr,
+                    'chatusr': chatusr,
+                    'displayname': displayname,
+                    'content': content.strip()
+                    }
+                }
+                '''
                 self.ctype = ContextType.QUOTE
-                self.content = result["title"] #引用说的话
+                #self.content = result["title"] #引用说的话
+                self.content = f'{result["title"]} {result["reference"]["url"]}'
+
             elif result['message_type'] ==19 and 'title' in  result  and  result['title'] =='群聊的聊天记录':
 
                 # 这里只能得到nickname， actual_user_id还是机器人的id
@@ -318,6 +334,11 @@ class WechatMessage(ChatMessage):
             chatusr = refermsg.find('chatusr').text if refermsg.find('chatusr') is not None else "N/A"
             displayname = refermsg.find('displayname').text if refermsg.find('displayname') is not None else "N/A"
             content = refermsg.find('content').text if refermsg.find('content') is not None else "N/A"
+            try:
+                root2 = ET.fromstring(content)
+                url = root2.find('.//url').text if root2.find('.//url') is not None else "N/A"
+            except:
+                url = ""
             message_info = {
                 'message_type': 'appmsg',
                 'title': title,
@@ -333,7 +354,8 @@ class WechatMessage(ChatMessage):
                     'fromusr': fromusr,
                     'chatusr': chatusr,
                     'displayname': displayname,
-                    'content': content.strip()
+                    'content': content.strip(),
+                    'url': url,
                 }
             })
             # 输出提取的信息
@@ -344,6 +366,7 @@ class WechatMessage(ChatMessage):
             logger.info(f"聊天群: {chatusr}")
             logger.info(f"显示名: {displayname}")
             logger.info(f"引用消息: {content}")
+            logger.info(f"文章URl: {url}")
             return message_info
         else:
             # 提取关键信息

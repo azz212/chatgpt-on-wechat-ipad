@@ -59,7 +59,11 @@ class timetask(Plugin):
             ContextType.TEXT,
         ]:
             return
-        
+
+        def extract_time(text):
+            pattern = r'\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{2}|\d{1,2}点'
+            times = re.findall(pattern, text)
+            return times
         #查询内容
         query = e_context["context"].content
         logging.info("定时任务的输入信息为:{}".format(query))
@@ -67,9 +71,43 @@ class timetask(Plugin):
         command_prefix = self.conf.get("command_prefix", "$time")
         
         #需要的格式：$time 时间 事件
+        #command_prefix
+        command_pre = ['每天','每周一','每周二','每周三','每周四','每周五','每周六','每周日',
+                       '每小时']
+        for pre in command_pre:
+            if query.startswith(pre):
+                logger.info(f"触发词：{pre}")
+                left_query = query.replace(pre ,"")
+
+                times = extract_time(query)
+                if times:
+                    left_query =  left_query.replace(times[0] ,"")
+                    query = f"{pre} {times[0]} {left_query}"
+                    break
+
+                else:
+                    logger.info("缺少时间词汇，忽略命令")
+                    reply_text = "⏰定时任务，缺少时间，例子：每天10点早报"
+                    # 拼接提示
+                    reply_text = reply_text
+
+                    self.replay_use_default(reply_text,e_context)
+
+                    return
+        else:
+            logger.info("缺少触发词,忽略命令,继续执行")
+            # reply = Reply()
+            # reply.type = ReplyType.TEXT
+            # reply.content = ""
+            # e_context["reply"] = reply
+            #e_context.action = EventAction.CONTINUE
+
+            return
+
+
         if query.startswith(command_prefix) :
             #处理任务
-            print("[timetask] 捕获到定时任务:{}".format(query))
+            logger.info("[timetask] 捕获到定时任务:{}".format(query))
             #移除指令
             #示例：$time 明天 十点十分 提醒我健身
             content = query.replace(f"{command_prefix}", "", 1).strip()
@@ -92,6 +130,14 @@ class timetask(Plugin):
         #分割
         wordsArray = content.split(" ")
         #任务编号
+        if len(wordsArray)<=1:
+            tempStr = self.get_default_remind(TimeTaskRemindType.Cancel_Failed)
+            reply_text = "⏰定时任务，取消失败😭，未找到任务编号，请核查\n" + "【任务编号】：" + ""
+            # 拼接提示
+            reply_text = reply_text + tempStr
+            # 回复
+            self.replay_use_default(reply_text, e_context)
+
         taskId = wordsArray[1]
         isExist, taskModel = ExcelTool().write_columnValue_withTaskId_toExcel(taskId, 2, "0")
         taskContent = "未知"

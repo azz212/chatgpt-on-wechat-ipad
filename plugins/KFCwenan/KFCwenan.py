@@ -31,7 +31,7 @@ class KFCwenan(Plugin):
             return
         self.content = e_context["context"].content.strip()
 
-        if self.content.lower() == "kfc":
+        if self.content.lower() == "kfc" or self.content.lower() == "疯狂星期四":
             logger.info(f"[{__class__.__name__}] 收到消息: {self.content}")
             reply = Reply()
             url = BASE_URL_DM +"kfc"

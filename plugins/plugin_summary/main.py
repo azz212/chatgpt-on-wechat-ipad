@@ -19,6 +19,8 @@ from chatgpt_tool_hub.chains.llm import LLMChain
 from chatgpt_tool_hub.models import build_model_params
 from chatgpt_tool_hub.models.model_factory import ModelFactory
 from chatgpt_tool_hub.prompts import PromptTemplate
+import xml.etree.ElementTree as ET
+
 TRANSLATE_PROMPT = '''
 You are now the following python function: 
 ```# {{translate text to commands}}"
@@ -96,8 +98,8 @@ class Summary(Plugin):
             # self.conn.commit()
 
             btype = Bridge().btype['chat']
-            if btype not in [const.OPEN_AI, const.CHATGPT, const.CHATGPTONAZURE, const.LINKAI]:
-                raise Exception("[Summary] init failed, not supported bot type")
+            # if btype not in [const.OPEN_AI, const.CHATGPT, const.CHATGPTONAZURE, const.LINKAI]:
+            #     raise Exception("[Summary] init failed, not supported bot type")
             self.bot = bot_factory.create_bot(Bridge().btype['chat'])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.handlers[Event.ON_RECEIVE_MESSAGE] = self.on_receive_message
@@ -299,117 +301,134 @@ class Summary(Plugin):
 
     def on_handle_context(self, e_context: EventContext):
 
-        if e_context['context'].type != ContextType.TEXT:
-            return
+        if e_context['context'].type == ContextType.TEXT:
+
         
-        content = e_context['context'].content
-        logger.debug("[Summary] on_handle_context. content: %s" % content)
-        trigger_prefix = conf().get('plugin_trigger_prefix', "$")
-        clist = content.split()
-        if clist[0].startswith(trigger_prefix):
-            limit = 99
-            duration = -1
+            content = e_context['context'].content
 
-            if "总结" in clist[0]:
-                flag = False
-                if trigger_prefix+"总结" in clist[0]:
-                    flag = True
-                    if len(clist) > 1:
+            logger.debug("[Summary] on_handle_context. content: %s" % content)
+            trigger_prefix = conf().get('plugin_trigger_prefix', "$")
+            clist = content.split()
+            if clist[0].startswith(trigger_prefix):
+                limit = 99
+                duration = -1
+
+                if "总结" in clist[0]:
+                    flag = False
+                    if trigger_prefix+"总结" in clist[0]:
+                        flag = True
+                        if len(clist) > 1:
+                            try:
+                                limit = int(clist[1])
+                                logger.debug("[Summary] limit: %d" % limit)
+                            except Exception as e:
+                                flag = False
+                    if not flag:
+                        if trigger_prefix =="":
+                            split_char = " "
+                        else:
+                            split_char =trigger_prefix
+                        text = content.split(split_char,maxsplit=1)[1]
                         try:
-                            limit = int(clist[1])
-                            logger.debug("[Summary] limit: %d" % limit)
+                            command_json = find_json(self._translate_text_to_commands(text))
+                            command = json.loads(command_json)
+                            name = command["name"]
+                            if name.lower() == "summary":
+                                limit = int(command["args"].get("count", 99))
+                                if limit < 0:
+                                    limit = 299
+                                duration = int(command["args"].get("duration_in_seconds", -1))
+                                logger.debug("[Summary] limit: %d, duration: %d seconds" % (limit, duration))
                         except Exception as e:
-                            flag = False
-                if not flag:
-                    if trigger_prefix =="":
-                        split_char = " "
-                    else:
-                        split_char =trigger_prefix
-                    text = content.split(split_char,maxsplit=1)[1]
-                    try:
-                        command_json = find_json(self._translate_text_to_commands(text))
-                        command = json.loads(command_json)
-                        name = command["name"]
-                        if name.lower() == "summary":
-                            limit = int(command["args"].get("count", 99))
-                            if limit < 0:
-                                limit = 299
-                            duration = int(command["args"].get("duration_in_seconds", -1))
-                            logger.debug("[Summary] limit: %d, duration: %d seconds" % (limit, duration))
-                    except Exception as e:
-                        logger.error("[Summary] translate failed: %s" % e)
-                        return
-            else:
-                return
-
-            start_time = int(time.time())
-            if duration > 0:
-                start_time = start_time - duration
-            else:
-                start_time = 0
-
-                
-
-            msg:ChatMessage = e_context['context']['msg']
-            session_id = msg.from_user_id
-            if clist[0]=="总结":
-                session_id = msg.from_user_id
-            elif "总结" in content and "所有人" in content:
-                session_id= ''
-            room_id = msg.other_user_id
-            #if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
-            #    session_id = msg.from_user_nickname # itchat channel id会变动，只好用名字作为session id
-            records = self._get_records(session_id,room_id, start_time, limit)
-            for i in range(len(records)):
-                record=list(records[i])
-                content = record[3]
-                if content:
-                    clist = re.split(r'\n- - - - - - - - -.*?\n', content)
-                    if len(clist) > 1:
-                        record[3] = clist[1]
-                        records[i] = tuple(record)
-            if len(records) <= 1:
-                reply = Reply(ReplyType.INFO, "无聊天记录可供总结")
-                e_context['reply'] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-            
-            max_tokens_persession = 3600
-
-            count, summarys = self._split_messages_to_summarys(records, max_tokens_persession)
-            if count == 0 :
-                if isinstance(summarys,str):
-                    reply = Reply(ReplyType.ERROR, summarys)
+                            logger.error("[Summary] translate failed: %s" % e)
+                            return
                 else:
-                    reply = Reply(ReplyType.ERROR, "总结聊天记录失败")
-                e_context['reply'] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
+                    return
+
+                start_time = int(time.time())
+                if duration > 0:
+                    start_time = start_time - duration
+                else:
+                    start_time = 0
 
 
-            if len(summarys) == 1:
-                reply = Reply(ReplyType.TEXT, f"本次总结了{count}条消息。\n\n"+summarys[0])
+
+                msg:ChatMessage = e_context['context']['msg']
+                session_id = msg.from_user_id
+                if clist[0]=="总结":
+                    session_id = msg.from_user_id
+                elif "总结" in content and "所有人" in content:
+                    session_id= ''
+                room_id = msg.other_user_id
+                #if conf().get('channel_type', 'wx') == 'wx' and msg.from_user_nickname is not None:
+                #    session_id = msg.from_user_nickname # itchat channel id会变动，只好用名字作为session id
+                records = self._get_records(session_id,room_id, start_time, limit)
+                for i in range(len(records)):
+                    record=list(records[i])
+                    content = record[3]
+                    if content:
+                        clist = re.split(r'\n- - - - - - - - -.*?\n', content)
+                        if len(clist) > 1:
+                            record[3] = clist[1]
+                            records[i] = tuple(record)
+                if len(records) <= 1:
+                    reply = Reply(ReplyType.INFO, "无聊天记录可供总结")
+                    e_context['reply'] = reply
+                    e_context.action = EventAction.BREAK_PASS
+                    return
+
+                max_tokens_persession = 3600
+
+                count, summarys = self._split_messages_to_summarys(records, max_tokens_persession)
+                if count == 0 :
+                    if isinstance(summarys,str):
+                        reply = Reply(ReplyType.ERROR, summarys)
+                    else:
+                        reply = Reply(ReplyType.ERROR, "总结聊天记录失败")
+                    e_context['reply'] = reply
+                    e_context.action = EventAction.BREAK_PASS
+                    return
+
+
+                if len(summarys) == 1:
+                    reply = Reply(ReplyType.TEXT, f"本次总结了{count}条消息。\n\n"+summarys[0])
+                    e_context['reply'] = reply
+                    e_context.action = EventAction.BREAK_PASS
+                    return
+
+                self.bot.args["max_tokens"] = None
+                query = ""
+                for i,summary in enumerate(reversed(summarys)):
+                    query += summary + "\n----------------\n\n"
+                prompt = "你是一位群聊机器人，聊天记录已经在你的大脑中被你总结成多段摘要总结，你需要对它们进行摘要总结，最后输出一篇完整的摘要总结，用列表的形式输出。\n"
+
+                session = self.bot.sessions.build_session(session_id, prompt)
+                session.add_query(query)
+                result = self.bot.reply_text(session)
+                total_tokens, completion_tokens, reply_content = result['total_tokens'], result['completion_tokens'], result['content']
+                logger.debug("[Summary] total_tokens: %d, completion_tokens: %d, reply_content: %s" % (total_tokens, completion_tokens, reply_content))
+                if completion_tokens == 0:
+                    reply = Reply(ReplyType.ERROR, "合并摘要失败，"+reply_content+"\n原始多段摘要如下：\n"+query)
+                else:
+                    reply = Reply(ReplyType.TEXT, f"本次总结了{count}条消息。\n\n"+reply_content)
                 e_context['reply'] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-            
-            self.bot.args["max_tokens"] = None
-            query = ""
-            for i,summary in enumerate(reversed(summarys)):
-                query += summary + "\n----------------\n\n"
-            prompt = "你是一位群聊机器人，聊天记录已经在你的大脑中被你总结成多段摘要总结，你需要对它们进行摘要总结，最后输出一篇完整的摘要总结，用列表的形式输出。\n"
-            
-            session = self.bot.sessions.build_session(session_id, prompt)
-            session.add_query(query)
-            result = self.bot.reply_text(session)
-            total_tokens, completion_tokens, reply_content = result['total_tokens'], result['completion_tokens'], result['content']
-            logger.debug("[Summary] total_tokens: %d, completion_tokens: %d, reply_content: %s" % (total_tokens, completion_tokens, reply_content))
-            if completion_tokens == 0:
-                reply = Reply(ReplyType.ERROR, "合并摘要失败，"+reply_content+"\n原始多段摘要如下：\n"+query)
-            else:
-                reply = Reply(ReplyType.TEXT, f"本次总结了{count}条消息。\n\n"+reply_content)     
-            e_context['reply'] = reply
-            e_context.action = EventAction.BREAK_PASS # 事件结束，并跳过处理context的默认逻辑
+                e_context.action = EventAction.BREAK_PASS # 事件结束，并跳过处理context的默认逻辑
+
+        elif e_context['context'].type == ContextType.QUOTE:
+            content = e_context['context'].content
+            if isinstance(content, str):
+                command = content.split(" ")
+
+                if command[0] in ['总结文章',"总结这篇文章","总结一下","分析","分析一下",'总结']:
+                    url =command[1]
+                    logger.info(f"要总结的文章链接：{url}")
+                    prompt = "你是一个文章总结专家，请总结下面这个URL的文章:"
+                    reply = Reply(ReplyType.TEXT, prompt+url)
+                    e_context['reply'] = reply
+                    e_context['context'].content = prompt+url
+                    e_context['context'].type =ContextType.TEXT
+                    e_context.action = EventAction.BREAK
+
 
 
     def get_help_text(self, verbose = False, **kwargs):
