@@ -39,16 +39,16 @@ class WechatMessage(ChatMessage):
             self.ctype = ContextType.VOICE
             self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
             #self._prepare_fn = lambda: itchat_msg.download(self.content)
-        elif itchat_msg["type"] in ['8005']:#群聊红包、文件、链接、小程序等类型
-            self.ctype = ContextType.XML
-            self.content = itchat_msg["msg"]
+        # elif itchat_msg["type"] in ['8005']:#群聊红包、文件、链接、小程序等类型
+        #     self.ctype = ContextType.XML
+        #     self.content = itchat_msg["msg"]
         elif itchat_msg["type"] in ['8006', '9006']:  # 群聊地图位置消息
             self.ctype = ContextType.MAP
         elif itchat_msg["type"] in ['8007', '9007']:#群聊表情包
             self.ctype = ContextType.EMOJI
         elif itchat_msg["type"] in ['8008', '9008']:#群聊名片
             self.ctype = ContextType.CARD
-        elif itchat_msg["type"] in ['7005','9005']:
+        elif itchat_msg["type"] in ['7005','9005','8005']: #xml格式的
             result = self.parse_wechat_message( itchat_msg["msg"])
             if result['message_type'] =='sysmsgtemplate' and  result['subtype'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
@@ -85,9 +85,14 @@ class WechatMessage(ChatMessage):
                     }
                 }
                 '''
-                self.ctype = ContextType.QUOTE
-                #self.content = result["title"] #引用说的话
-                self.content = f'{result["title"]} {result["reference"]["url"]}'
+                if result["reference"]["url"]:
+                    self.ctype = ContextType.QUOTE
+                    #self.content = result["title"] #引用说的话
+                    self.content = f'{result["title"]} {result["reference"]["url"]}'
+                else:
+                    self.ctype = ContextType.XML
+                    # self.content = result["title"] #引用说的话
+                    self.content =  itchat_msg["msg"]
 
             elif result['message_type'] ==19 and 'title' in  result  and  result['title'] =='群聊的聊天记录':
 
@@ -328,17 +333,20 @@ class WechatMessage(ChatMessage):
             appmsg = root.find('appmsg')
             title = appmsg.find('title').text if appmsg.find('title') is not None else "N/A"
 
-            refer_type = refermsg.find('type').text if refermsg.find('type') is not None else "N/A"
+
             svrid = refermsg.find('svrid').text if refermsg.find('svrid') is not None else "N/A"
             fromusr = refermsg.find('fromusr').text if refermsg.find('fromusr') is not None else "N/A"
             chatusr = refermsg.find('chatusr').text if refermsg.find('chatusr') is not None else "N/A"
             displayname = refermsg.find('displayname').text if refermsg.find('displayname') is not None else "N/A"
-            content = refermsg.find('content').text if refermsg.find('content') is not None else "N/A"
+            content = refermsg.find('content').text.strip() if refermsg.find('content') is not None else "N/A"
+            refer_type = refermsg.find('type').text if refermsg.find('type') is not None else "N/A"
             try:
                 root2 = ET.fromstring(content)
                 url = root2.find('.//url').text if root2.find('.//url') is not None else "N/A"
+                #refer_type = refermsg.find('type').text if refermsg.find('type') is not None else "N/A"
             except:
                 url = ""
+                #refer_type=None
             message_info = {
                 'message_type': 'appmsg',
                 'title': title,
@@ -354,7 +362,7 @@ class WechatMessage(ChatMessage):
                     'fromusr': fromusr,
                     'chatusr': chatusr,
                     'displayname': displayname,
-                    'content': content.strip(),
+                    'content': content,
                     'url': url,
                 }
             })

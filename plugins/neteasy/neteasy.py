@@ -49,26 +49,20 @@ class neteasy(Plugin):
         logger.debug("[neteasy] on_handle_context. content: %s" % content)
         if  "wx7be3c1bb46c68c63" in content :
             retcode, filename, filepath = download_163news(content)
-            ret = upload_aliyun(filepath, '网易视频')
+            if retcode!=None:
+                ret = upload_aliyun(filepath, '网易视频')
 
-            reply = Reply()
-            reply.type = ReplyType.TEXT
-            if ret:
-                reply.content = f"neteasy,视频上传完成: {filename} "
-            else:
-                reply.content = f"neteasy,视频上传失败:, {filename}"
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+                reply = Reply()
+                reply.type = ReplyType.TEXT
+                if ret:
+                    reply.content = f"neteasy,视频上传完成: {filename} "
+                else:
+                    reply.content = f"neteasy,视频上传失败:, {filename}"
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
-        elif '' in content:
-
-            url =self.get_xml_element(content,'url')
-            #修改接收到的消息，将url提取后，继续让gpt处理
-            if url:
-                if 'http://mp.weixin.qq.com/' in url:
-                    e_context["context"].content=">请提取URl的内容，总结这篇文章，URL是{}".format(url)
-
-                    e_context.action = EventAction.CONTINUE  # 事件继续
+        # else:
+        #     e_context.action = EventAction.CONTINUE  # 事件继续
 
 
     def get_help_text(self, **kwargs):

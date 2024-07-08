@@ -214,24 +214,25 @@ def download_163news(message):
     if videourl!='':
         ret_json = downloadneteasy(videourl)
         if ret_json != None:
-
-            title = ret_json['data']['title']
-            mp4_url = ret_json['data']['mp4_url']
-            m3u8_url = ret_json['data']['m3u8_url']
-            topicImg = ret_json['data']['topicImg']
-            vid = ret_json['data']['vid']
-            print(title)
-            print(mp4_url)
-            print(m3u8_url)
-            print(topicImg)
-            C = SaveVideo()
-            title = re.sub(r'[~`!@#$%^&*()_“”：\-+=|\\{\}\[\]:;\"\'<>,.?/·！￥…（）—【】、？《》，。]+', '_', title)
-            retcode,filename,filepath = C.downloadVideo(mp4_url, file_name=title)
-
-
-            return  retcode,filename,filepath
+            if 'data' in ret_json:
+                if ret_json['data']:
+                    title = ret_json['data'].get('title')
+                    mp4_url = ret_json['data'].get('mp4_url')
+                    m3u8_url = ret_json['data'].get('m3u8_url')
+                    topicImg = ret_json['data'].get('topicImg')
+                    vid = ret_json['data'].get('vid')
+                    print(title)
+                    print(mp4_url)
+                    print(m3u8_url)
+                    print(topicImg)
+                    C = SaveVideo()
+                    title = re.sub(r'[~`!@#$%^&*()_“”：\-+=|\\{\}\[\]:;\"\'<>,.?/·！￥…（）—【】、？《》，。]+', '_', title)
+                    retcode,filename,filepath = C.downloadVideo(mp4_url, file_name=title)
 
 
+                    return  retcode,filename,filepath
+
+    return None,None,None
 if __name__ == '__main__':
 
     filepath = r'D:\pysrc\wechatbot\chatgpt-on-wechat-ipad\plugins\neteasy\video\美国一警察执勤时拍不雅短剧_被捕后被控两项重罪.mp4'
