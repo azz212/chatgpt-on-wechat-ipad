@@ -71,7 +71,7 @@ class ByteDanceCozeBot(Bot):
             return reply
         else:
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
-            return reply
+            return None
 
     def _get_api_base_url(self):
         return conf().get("coze_api_base", "https://api.coze.cn/open_api/v2")

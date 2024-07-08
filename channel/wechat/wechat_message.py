@@ -85,7 +85,7 @@ class WechatMessage(ChatMessage):
                     }
                 }
                 '''
-                if result["reference"]["url"]:
+                if result["reference"]["url"] and result["reference"]["url"] !="N/A":
                     self.ctype = ContextType.QUOTE
                     #self.content = result["title"] #引用说的话
                     self.content = f'{result["title"]} {result["reference"]["url"]}'
@@ -338,7 +338,7 @@ class WechatMessage(ChatMessage):
             fromusr = refermsg.find('fromusr').text if refermsg.find('fromusr') is not None else "N/A"
             chatusr = refermsg.find('chatusr').text if refermsg.find('chatusr') is not None else "N/A"
             displayname = refermsg.find('displayname').text if refermsg.find('displayname') is not None else "N/A"
-            content = refermsg.find('content').text.strip() if refermsg.find('content') is not None else "N/A"
+            content = refermsg.find('content').text if refermsg.find('content') is not None else "N/A"
             refer_type = refermsg.find('type').text if refermsg.find('type') is not None else "N/A"
             try:
                 root2 = ET.fromstring(content)
