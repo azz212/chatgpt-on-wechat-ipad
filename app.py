@@ -10,7 +10,7 @@ from common import const
 from config import load_config
 from plugins import *
 import threading
-from quart import Quart, request, jsonify,render_template,send_file
+from quart import jsonify,render_template,send_file
 import concurrent.futures
 import asyncio
 from channel.wechat.wechat_message import *
@@ -124,6 +124,36 @@ def callback(worker):
     worker_exception = worker.exception()
     if worker_exception:
         logger.error(worker_exception)
+@quart_app.route("/rooms", methods=["GET"])
+def rooms():
+
+    response_data = iPadWx().get_room_list()  # assuming this returns a list of room names
+    data = response_data.get("data")
+    if data:
+        if isinstance(data,dict):
+
+            return render_template('dict.html', data=data)
+        elif isinstance(data,list):
+            #return render_template('list.html', data=data)
+            return jsonify(data)
+        else:
+            return jsonify({"code": 0,"response":"签到成功"})
+    return jsonify({"code": -1,"response":"获取房间列表失败"})
+@quart_app.route("/send_msg", methods=["GET"])
+def send_msg():
+    to_id = request.args.get('to_id')
+    text = request.args.get('text')
+
+    if not to_id or not text:
+        return jsonify({"code": -1, "message": "Both 'to_id' and 'text' parameters are required."}), 400
+
+    result = iPadWx().send_txt_msg(to_id=to_id, text=text)
+    if result:
+        return jsonify({"code": 0, "message": "Message sent successfully."})
+    else:
+        return jsonify({"code": -1, "message": "Failed to send message."}), 500
+
+
 if __name__ == "__main__":
     '''
     todo 1 将web框架修改为flask 或者Quart OK
