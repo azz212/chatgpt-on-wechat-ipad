@@ -21,7 +21,7 @@
 ## 社区
 过期加个微:rongrong3938
 开源项目交流群：
-![交流群图片](docs/images/contact.jpg)
+![交流群图片](docs/images/contact.png)
 
 # 🚀 优点
 **无需Windows 系统：**  无需Windows环境，Linux即可，可云服务器挂机
