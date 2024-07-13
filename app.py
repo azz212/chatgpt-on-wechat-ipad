@@ -143,11 +143,16 @@ def rooms():
 def send_msg():
     to_id = request.args.get('to_id')
     text = request.args.get('text')
+    at_id = request.args.get('at_id')
+    displayName,nickname = iPadWx().get_chatroom_nickname(to_id,at_id)
 
     if not to_id or not text:
         return jsonify({"code": -1, "message": "Both 'to_id' and 'text' parameters are required."}), 400
-
-    result = iPadWx().send_txt_msg(to_id=to_id, text=text)
+    if at_id:
+        content = "@"+nickname+" "+text
+        result = iPadWx().send_at_msg(to_id=to_id,at_ids=at_id,nickname=nickname, content=content)
+    else:
+        result = iPadWx().send_txt_msg(to_id=to_id, text=text)
     if result:
         return jsonify({"code": 0, "message": "Message sent successfully."})
     else:

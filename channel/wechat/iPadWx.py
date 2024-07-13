@@ -369,29 +369,25 @@ class iPadWx:
         res = list(filter(lambda user: user['userName'] == username, users))
 
         return res[0] if res else None  # 如果找到了就返回找到的元素（因为 filter 返回的是列表，所以我们取第一个元素），否则返回 None
-    def get_chatroom_nickname(self, roomid: str = 'null', wxid: str = 'ROOT'):
+
+
+    def get_chatroom_nickname(self, room_id: str = 'null', wxid: str = 'ROOT'):
         '''
         获取群聊中用户昵称 Get chatroom's user's nickname
         群成员如果变了，没有获取到，则重新获取
-        :param roomid: 群号(以@chatroom结尾) groupchatid(end with@chatroom)
+        :param room_id: 群号(以@chatroom结尾) groupchatid(end with@chatroom)
         :param wxid: wxid(新用户的wxid以wxid_开头 老用户他们可能修改过 现在改不了) wechatid(start with wxid_)
         :return: Dictionary
         '''
-        if roomid.endswith("@chatroom") and not wxid.endswith("@chatroom"):
-            if roomid in iPadWx.shared_wx_contact_list :
-                print("无需获取")
-                member_info = self.get_user(iPadWx.shared_wx_contact_list [roomid],wxid)
-            else:
-                members = self.get_chatroom_memberlist(roomid)
-                member_info = self.get_user(members['data'], wxid)
-
-            #如果成员变了，没找到
-            if not member_info:
-                members = self.get_chatroom_memberlist(roomid)
-                member_info = self.get_user(members['data'], wxid)
-
-            return  member_info['displayName'] or member_info['nickName']
-        return None
+        if room_id.endswith("@chatroom") and not wxid.endswith("@chatroom"):
+            if room_id in iPadWx.shared_wx_contact_list:
+                logger.debug("无需网络获取，本地读取")
+                # logger.info(iPadWx.shared_wx_contact_list[room_id])
+                member = iPadWx.shared_wx_contact_list[room_id]['chatRoomMembers']
+                # logger.info(member)
+                member_info = self.get_user(member, wxid)
+                return member_info['displayName'], member_info['nickName']
+        return None, None
 
     def exit_room(self, room_id):
         data = {'room_id': room_id}

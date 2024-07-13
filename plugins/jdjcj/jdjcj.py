@@ -43,6 +43,9 @@ class jdjcj(Plugin):
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
 
+        elif self.content.lower()=="挂单":
+            pass
+
     def jdjr_jcj(self):
         s = requests.session()
         # client_id 为官网获取的AK， client_secret 为官网获取的SK
