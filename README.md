@@ -19,9 +19,9 @@
 4. 任何个人、团队和企业，无论以何种方式使用该项目、对何对象提供服务，所产生的一切后果，本项目均不承担任何责任
 
 ## 社区
-
+过期加个微:rongrong3938
 开源项目交流群：
-![交流群图片](docs/images/contact.jpg)
+![交流群图片](docs/images/contact.png)
 
 # 🚀 优点
 **无需Windows 系统：**  无需Windows环境，Linux即可，可云服务器挂机
