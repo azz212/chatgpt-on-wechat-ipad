@@ -80,7 +80,7 @@ run()
 
 @quart_app.route("/chat", methods=["POST"])
 async def chat():
-    # 绫诲父閲�
+    # 类常量
     FAILED_MSG = '{"success": false}'
     SUCCESS_MSG = '{"success": true}'
     MESSAGE_RECEIVE_TYPE = "8001"
@@ -137,20 +137,18 @@ def rooms():
             #return render_template('list.html', data=data)
             return jsonify(data)
         else:
-            return jsonify({"code": 0,"response":"绛惧埌鎴愬姛"})
-    return jsonify({"code": -1,"response":"鑾峰彇鎴块棿鍒楄〃澶辫触"})
+            return jsonify({"code": 0,"response":"签到成功"})
+    return jsonify({"code": -1,"response":"获取房间列表失败"})
 @quart_app.route("/send_msg", methods=["GET"])
 def send_msg():
     to_id = request.args.get('to_id')
     text = request.args.get('text')
     at_id = request.args.get('at_id')
-    
+    displayName,nickname = iPadWx().get_chatroom_nickname(to_id,at_id)
 
     if not to_id or not text:
         return jsonify({"code": -1, "message": "Both 'to_id' and 'text' parameters are required."}), 400
     if at_id:
-        
-        displayName,nickname = iPadWx().get_chatroom_nickname(to_id,at_id)
         content = "@"+nickname+" "+text
         result = iPadWx().send_at_msg(to_id=to_id,at_ids=at_id,nickname=nickname, content=content)
     else:
@@ -163,14 +161,14 @@ def send_msg():
 
 if __name__ == "__main__":
     '''
-    todo 1 灏唚eb妗嗘灦淇�敼涓篺lask 鎴栬€匭uart OK
-    todo 2 鎺ユ敹鍥剧墖鏃跺垽鏂�槸鍚︿负绌猴紝濡傛灉涓虹┖锛屽垯鍙戦€佹彁閱� OK
-    todo 3 鍙戦€佽秴杩�1024鏃讹紝瑕佸垎娈靛彂閫�
-    todo 4 鐢诲浘鏃讹紝缁撴灉鍙�互at 骞舵樉绀烘彁绀鸿瘝銆倅es
-    todo 5 鐢诲浘鏃讹紝鍏堝彂閫佷竴涓�瓑寰呮秷鎭�紝鎻愮ず姝ｅ湪澶勭悊涓� NA
-    todo 6 help鍜岃彍鍗曞姛鑳�
-    todo 7 澶氫釜API鎺ュ叆鐐癸紝濡備綍鍒囨崲鍜屾�鏌ラ敊璇�紝涓诲姩灞忚斀缁忓父涓嶅彲鐢ㄦ湇鍔″櫒 銆� 鍔熻兘鍜屾ā鍨嬪�搴�
-    todo 8 閮ㄧ讲鍒伴�娓�湇鍔″櫒
+    todo 1 将web框架修改为flask 或者Quart OK
+    todo 2 接收图片时判断是否为空，如果为空，则发送提醒 OK
+    todo 3 发送超过1024时，要分段发送
+    todo 4 画图时，结果可以at 并显示提示词。yes
+    todo 5 画图时，先发送一个等待消息，提示正在处理中 NA
+    todo 6 help和菜单功能
+    todo 7 多个API接入点，如何切换和检查错误，主动屏蔽经常不可用服务器 。 功能和模型对应
+    todo 8 部署到香港服务器
     
     '''
     port = conf().get("wechatipad_port", 5711)
