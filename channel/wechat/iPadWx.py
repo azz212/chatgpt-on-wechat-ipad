@@ -6,6 +6,7 @@ import hashlib
 from config import conf
 import os
 from common.log import logger
+from pydub import AudioSegment
 class iPadWx:
     '''
     获取步骤：
@@ -125,7 +126,7 @@ class iPadWx:
     def create_user(self, user_data):
         return self.call_api("POST", "user/create", user_data)
 
-    def get_qrcode(self, province, city=None):
+    def get_qrcode(self, province=None, city=None):
         params = {
             "province": province
         }
@@ -332,7 +333,10 @@ class iPadWx:
 
         data = {'to_id': to_id, 'xml': xml}
         return self.call_api('POST', 'open/video/forward', data)
+    def forward_img(self, to_id, xml):
 
+        data = {'to_id': to_id, 'xml': xml}
+        return self.call_api('POST', 'open/image/forward', data)
     def get_room_list2(self):
         return self.call_api('GET', 'open/room/list')
 
@@ -399,7 +403,12 @@ class iPadWx:
             'wx_ids': wx_ids
         }
         return self.call_api('POST', 'open/room/remove', data=data)
-
+    def moment_friends(self, content, urls):
+        data = {
+            'content': content,
+            'url': urls
+        }
+        return self.call_api('POST', 'open/circle/send', data=data)
     def upload_pic(self,local_file,upload_url):
         '''
         '{"url":"https://openai-75050.gzc.vod.tencent-cloud.com/openaiassets_14eb211d797ccdf33edc19839a7bcbcc_2579861717036942746.jpg","filekey":"openaiassets_14eb211d797ccdf33edc19839a7bcbcc_2579861717036942746.jpg"}'
