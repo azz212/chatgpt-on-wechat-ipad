@@ -5,9 +5,11 @@
 
 最新版本支持的功能如下：
 -  ✅   **具备原COW所有功能并保持更新：** 私聊及群聊的消息智能回复，支持多轮会话上下文记忆，支持 GPT-3.5, GPT-4, GPT-4o, Claude-3, Gemini, 文心一言, 讯飞星火, 通义千问，ChatGLM-4，Kimi(月之暗面)
+-  ✅   **智能客服：** 智能聊天，智能客服，支持Dify,Maxkb(可自建知识库无限制）
+-  ✅   **基础功能：** 自动同意好友，进群欢迎，天气，关键字触发
 -  ✅   **插件功能丰富：** 看图猜成语，早报，定时任务，疯狂星期4文案，画图
 -  ✅   **图像能力：** 支持图片生成、图片识别、图生图（如照片修复），可选择 Dall-E-3, stable diffusion, replicate, midjourney, CogView-3, vision模型
--  ✅   **丰富插件：** 支持个性化插件扩展，已实现多角色切换、文字冒险、敏感词过滤、聊天记录总结、文档总结和对话、联网搜索，看图猜成语，KFC，早报，热榜等非常多的娱乐插件
+-  ✅   **丰富插件：** 支持个性化插件扩展，敏感词过滤、聊天记录总结、文档总结和对话、联网搜索，看图猜成语，KFC，早报，热榜等非常多的娱乐插件
 ![看图猜成语](docs/images/idiom.jpg)
 ![kfc](docs/images/KFC.jpg)
 ![早报](docs/images/morning.jpg)
@@ -27,14 +29,21 @@
 **无需Windows 系统：**  无需Windows环境，Linux即可，可云服务器挂机
 
 **成熟稳定：**  Linux可长期挂机使用，不掉线，不封号，一次扫码，长期在线，稳定就是最大的特点。
+**带简单后台维护：** 登录，微信号管理，定时任务，素材管理等，支持手机和电脑登录，自动适配
+![功能图片](docs/images/func1.png)
+![功能图片](docs/images/func2.png)
 
 **插件可扩展：**  目前已适配修改大量插件，可定制开发
-
-
+**部分功能展示：**  
+![功能图片](docs/images/login.png)
+![功能图片](docs/images/wechatmanage.png)
+![功能图片](docs/images/group.png)
+![功能图片](docs/images/plugins.png)
+![功能图片](docs/images/wechatmanage.png)
 ## 一、准备
 
 ### 1. 账号注册
-申请ipad协议账号，免费试用3天，首月10，次月20
+申请ipad协议账号，每月20，非免费协议，长期维护
 ### 2.运行环境
 
 支持 Linux、MacOS、Windows 系统（可在Linux服务器上长期运行)，同时需安装 `Python`。
@@ -109,13 +118,8 @@ pip3 install -r requirements-optional.txt
 + 可选配置: `group_name_keyword_white_list`配置项支持模糊匹配群名称，`group_chat_keyword`配置项则支持模糊匹配群消息内容，用法与上述两个配置项相同。（Contributed by [evolay](https://github.com/evolay))
 + `group_chat_in_one_session`：使群聊共享一个会话上下文，配置 `["ALL_GROUP"]` 则作用于所有群聊
 
-**3.语音识别**
 
-+ 添加 `"speech_recognition": true` 将开启语音识别，默认使用openai的whisper模型识别为文字，同时以文字回复，该参数仅支持私聊 (注意由于语音消息无法匹配前缀，一旦开启将对所有语音自动回复，支持语音触发画图)；
-+ 添加 `"group_speech_recognition": true` 将开启群组语音识别，默认使用openai的whisper模型识别为文字，同时以文字回复，参数仅支持群聊 (会匹配group_chat_prefix和group_chat_keyword, 支持语音触发画图)；
-+ 添加 `"voice_reply_voice": true` 将开启语音回复语音（同时作用于私聊和群聊）
-
-**4.其他配置**
+**3.其他配置**
 
 + `model`: 模型名称，目前支持 `gpt-3.5-turbo`, `gpt-4o`, `gpt-4-turbo`, `gpt-4`, `wenxin` , `claude` , `gemini`, `glm-4`,  `xunfei`, `moonshot`
 + `temperature`,`frequency_penalty`,`presence_penalty`: Chat API接口参数，详情参考[OpenAI官方文档。](https://platform.openai.com/docs/api-reference/chat)
