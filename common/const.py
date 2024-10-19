@@ -22,6 +22,7 @@ MiniMax = "minimax"
 DEEPSEEK = "deepseek"
 COZE = "coze"
 DIFY = "dify"
+MAXKB = "maxkb"
 # model
 CLAUDE3 = "claude-3-opus-20240229"
 GPT35 = "gpt-3.5-turbo"
@@ -64,7 +65,7 @@ MODEL_LIST = [
               "moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k",
               QWEN, QWEN_TURBO, QWEN_PLUS, QWEN_MAX,
               MiniMax,
-              LINKAI_35, LINKAI_4_TURBO, LINKAI_4o
+              LINKAI_35, LINKAI_4_TURBO, LINKAI_4o,COZE,DIFY,MAXKB,
             ]
 
 # channel

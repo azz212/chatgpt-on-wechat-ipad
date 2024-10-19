@@ -28,9 +28,10 @@ class ContextType(Enum):
     FUNCTION = 22  # 函数调用
     MP_LINK =23  #公众号推文
     XML = 24
-    ACCEPT_FRIEND =25
+    ACCEPT_FRIEND =25 # 同意好友
     MAP =26
     SHARING = 27  # 分享信息
+    ADD_FRIEND = 28# 添加好友
 
     def __str__(self):
         return self.name

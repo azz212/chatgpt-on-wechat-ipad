@@ -26,29 +26,34 @@ class WechatMessage(ChatMessage):
         self.is_group = itchat_msg["group"]
         self.room_id = itchat_msg["room_id"]
         self.bot = iPadWx()
-        if itchat_msg["type"] in ['8001','9001']   :
+        msg_type = itchat_msg["type"]
+        if msg_type in ['8001','9001']   :
             self.ctype = ContextType.TEXT
             self.content = itchat_msg["msg"]
-        elif itchat_msg["type"]   in ['8002','9002']:#群聊图片
+        elif msg_type   in ['8002','9002']:#群聊图片
             self.ctype = ContextType.IMAGE
+            self.content = itchat_msg['msg']
+            #self.bot.forward_img("gh_c95e05e75405", self.content)
             #self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
             #self._prepare_fn = lambda: itchat_msg.download(self.content)
-        elif itchat_msg["type"] in ['8003', '9003']:
+        elif msg_type in ['8003', '9003']:
             self.ctype = ContextType.VIDEO
-        elif itchat_msg["type"]  in ['8004','9004'] :#群聊语音消息
+            self.content = itchat_msg['msg']
+            #self.bot.forward_video("gh_c95e05e75405", self.content)
+        elif msg_type  in ['8004','9004'] :#群聊语音消息
             self.ctype = ContextType.VOICE
-            self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
+            #self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
             #self._prepare_fn = lambda: itchat_msg.download(self.content)
-        # elif itchat_msg["type"] in ['8005']:#群聊红包、文件、链接、小程序等类型
+        # elif msg_type in ['8005']:#群聊红包、文件、链接、小程序等类型
         #     self.ctype = ContextType.XML
         #     self.content = itchat_msg["msg"]
-        elif itchat_msg["type"] in ['8006', '9006']:  # 群聊地图位置消息
+        elif msg_type in ['8006', '9006']:  # 群聊地图位置消息
             self.ctype = ContextType.MAP
-        elif itchat_msg["type"] in ['8007', '9007']:#群聊表情包
+        elif msg_type in ['8007', '9007']:#群聊表情包
             self.ctype = ContextType.EMOJI
-        elif itchat_msg["type"] in ['8008', '9008']:#群聊名片
+        elif msg_type in ['8008', '9008']:#群聊名片
             self.ctype = ContextType.CARD
-        elif itchat_msg["type"] in ['7005','9005','8005']: #xml格式的
+        elif msg_type in ['7005','9005','8005']: #xml格式的
             result = self.parse_wechat_message( itchat_msg["msg"])
             if result['message_type'] =='sysmsgtemplate' and  result['subtype'] =='invite' :
                 # 这里只能得到nickname， actual_user_id还是机器人的id
@@ -86,7 +91,7 @@ class WechatMessage(ChatMessage):
                 }
                 '''
                 if result["reference"]["url"] and result["reference"]["url"] !="N/A":
-                    self.ctype = ContextType.QUOTE
+                    self.ctype = ContextType.TEXT
                     #self.content = result["title"] #引用说的话
                     self.content = f'{result["title"]} {result["reference"]["url"]}'
                 else:
@@ -99,6 +104,23 @@ class WechatMessage(ChatMessage):
                 # 这里只能得到nickname， actual_user_id还是机器人的id
                 self.ctype = ContextType.LINK
                 self.content = json.dumps(result["image_infos"]) # 内容 list
+            elif result['message_type'] == 2000 and result['title'] == "微信转账":
+                '''
+                message_info = {
+                    'title': title,
+                    'message_type': message_type,
+                    'feedesc': feedesc,
+                    'pay_memo': pay_memo,
+                    "receiver_username":receiver_username
+                }
+                '''
+                self.ctype = ContextType.WCPAY
+
+                self.content = result['feedesc'] + "\n" + result['pay_memo'] + "\n" + result['receiver_username']+"\n"+str(result["paysubtype"])
+                pass
+            elif result['message_type'] == 6 or result['message_type'] == 74:
+                self.ctype = ContextType.FILE
+                self.content = itchat_msg["msg"]
             elif "你已添加了" in itchat_msg["msg"]:  #通过好友请求
                 self.ctype = ContextType.ACCEPT_FRIEND
                 self.content = itchat_msg["msg"]
@@ -116,20 +138,32 @@ class WechatMessage(ChatMessage):
                 self.content = itchat_msg["msg"]
                 pass
                 #raise NotImplementedError("Unsupported note message: " + itchat_msg["msg"])
-        elif itchat_msg["type"] in ['8005','9005']:
+        elif msg_type in ['7001']: #添加好友消息
+            # 解析 XML
+            xml_data = itchat_msg["msg"]
+            root = ET.fromstring(xml_data)
+
+            # 获取 scene 和 ticket
+            scene = root.get('scene')
+            ticket = root.get('ticket')
+            self.ctype = ContextType.ADD_FRIEND
+            logger.info(f"scene: {scene}, ticket: {ticket}")
+            self.content = xml_data
+
+        elif msg_type in ['8005','9005']:
             self.ctype = ContextType.FILE
             #self.content = TmpDir().path() + itchat_msg.get("FileName")  # content直接存临时目录路径
             if self.content:
                 pass
                 #self._prepare_fn = lambda: itchat_msg.download(self.content)
-        elif itchat_msg["type"] == '9006':
+        elif msg_type == '9006':
             self.ctype = ContextType.XML
             self.content = itchat_msg.get("msg")
 
         else:
             pass
-            #raise NotImplementedError("Unsupported message type: Type:{} MsgType:{}".format(itchat_msg["type"],
-            #                                                                                itchat_msg["type"]))
+            #raise NotImplementedError("Unsupported message type: Type:{} MsgType:{}".format(msg_type,
+            #                                                                                msg_type))
         if not self.from_user_id:
             self.from_user_id = itchat_msg["from_id"]
 
@@ -153,6 +187,8 @@ class WechatMessage(ChatMessage):
                 #self.to_user_nickname = self.get_chatroom_nickname(self.room_id, self.to_user_id)
                 self.other_user_nickname = iPadWx.shared_wx_contact_list[self.room_id]['nickName']
             else:
+                if self.from_user_id in iPadWx.shared_wx_contact_list:
+                    self.from_user_nickname =  iPadWx.shared_wx_contact_list[self.from_user_id]['nickName']
                 if itchat_msg['bot_id']==itchat_msg['from_id']:#机器人发送
                     self.other_user_id = itchat_msg["to_id"]
                     self.other_user_nickname = self.to_user_nickname
@@ -175,7 +211,25 @@ class WechatMessage(ChatMessage):
             if self.ctype not in [ContextType.JOIN_GROUP, ContextType.PATPAT, ContextType.EXIT_GROUP]:
                 pass
                 self.actual_user_nickname = self.self_display_name #发送者的群昵称 还是本身的昵称
+            subtract_res = self.content
+            for at_id in self.at_list:
+                at_info = self.get_user(iPadWx.shared_wx_contact_list[self.room_id]["chatRoomMembers"],at_id)
 
+                nickname = at_info['nickName']
+                if nickname:
+                    pattern = f"@{re.escape(nickname)}(\u2005|\u0020)"
+                    subtract_res = re.sub(pattern, r"", subtract_res)
+                displayName = at_info['displayName'] if at_info['displayName'] else ""
+                if displayName:
+                    pattern = f"@{re.escape(at_info['displayName'])}(\u2005|\u0020)"
+                    subtract_res = re.sub(pattern, r"", subtract_res)
+                # 如果昵称没去掉，则用替换的方法
+                if subtract_res == self.content :
+                    # 前缀移除后没有变化，使用群昵称再次移除
+                    # pattern = f"@{re.escape(context['msg'].self_display_name)}(\u2005|\u0020)"
+                    subtract_res = self.content.replace("@" + nickname, "").replace(
+                        "@" + displayName, "")
+            self.content = subtract_res
     def get_user(self,users, username):
         # 使用 filter 函数通过给定的 userName 来找寻符合条件的元素
         if not isinstance(users,list):
@@ -425,9 +479,34 @@ class WechatMessage(ChatMessage):
                 }
 
                 # 将结果转换为JSON字符串
-                json_result = json.dumps(message_info, ensure_ascii=False, indent=2)
+                json_result = json.dumps(message_info, ensure_ascii=False, indent=4)
 
                 return  message_info
+            if title == "微信转账" and message_type == 2000:
+                # 提取feedesc中的转账金额
+                feedesc = root.find(".//feedesc").text.replace("￥", "")
+
+                # 提取pay_memo
+                pay_memo = root.find(".//pay_memo").text
+                paysubtype = root.find(".//paysubtype").text
+
+                receiver_username = root.find(".//receiver_username").text
+                # 构建JSON结构
+                message_info = {
+                    'title': title,
+                    'message_type': message_type,
+                    'feedesc': feedesc,
+                    'pay_memo': pay_memo if pay_memo else '',
+                    "receiver_username": receiver_username,
+                    "paysubtype": paysubtype
+                }
+                return message_info
+            elif message_type == 74 or message_type == 6: #文件类型
+                message_info = {
+                    'title': title,
+                    'message_type': message_type,
+                }
+                return message_info
             return {'message_type': message_type, 'info': '未知消息类型'}
 
     def load_contact(self):
@@ -437,5 +516,5 @@ class WechatMessage(ChatMessage):
             pass
     def save_contact(self):
 
-        json.dump(iPadWx.shared_wx_contact_list,open("contact.json",'w',encoding='utf-8'))
+        json.dump(iPadWx.shared_wx_contact_list,open("contact.json",'w',encoding='utf-8'), indent=4)
         logger.info(f"保存联系人!{iPadWx.shared_wx_contact_list}")

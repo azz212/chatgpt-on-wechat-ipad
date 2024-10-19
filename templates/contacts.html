@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>通讯录</h2>
+
+<!-- 搜索框 -->
+<div class="mb-3">
+    <input type="text" class="form-control" id="searchInput" placeholder="搜索联系人" onkeyup="filterContacts()">
+</div>
+
+<!-- 表格 -->
+<div class="table-responsive">
+    <table class="table table-striped" id="contactsTable">
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>电话</th>
+                <th>邮箱</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contact in contacts %}
+            <tr>
+                <td>{{ contact.name }}</td>
+                <td>{{ contact.phone }}</td>
+                <td>{{ contact.email }}</td>
+                <td>
+                    <button type="button" class="btn btn-info btn-sm" onclick="viewContact('{{ contact.id }}')">查看</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function filterContacts() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('contactsTable');
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) { // 从1开始，跳过表头
+        const tdName = tr[i].getElementsByTagName('td')[0];
+        const tdPhone = tr[i].getElementsByTagName('td')[1];
+        if (tdName || tdPhone) {
+            const txtValueName = tdName.textContent || tdName.innerText;
+            const txtValuePhone = tdPhone.textContent || tdPhone.innerText;
+            if (txtValueName.toLowerCase().indexOf(filter) > -1 || txtValuePhone.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+
+function viewContact(contactId) {
+    // 这里可以添加查看联系人的逻辑
+    alert('查看联系人 ID: ' + contactId);
+}
+</script>
+{% endblock %}

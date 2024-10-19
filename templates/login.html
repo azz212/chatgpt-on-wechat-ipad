@@ -1,0 +1,20 @@
+{% extends "base_login.html" %}
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="col-md-4">
+        <h2 class="text-center">登录</h2>
+        <form method="post" action="/login"> <!-- 确保设置 method 为 post -->
+            <div class="mb-3">
+                <label for="username" class="form-label">账号</label>
+                <input type="text" class="form-control" id="username" name="username" required> <!-- 添加 name 属性 -->
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required> <!-- 添加 name 属性 -->
+            </div>
+            <button type="submit" class="btn btn-primary w-100">登录</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

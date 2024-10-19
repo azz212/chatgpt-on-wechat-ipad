@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>设置</h2>
+<form id="settingsForm">
+    <div class="mb-3 d-flex align-items-center">
+    <label for="pluginSelect" class="form-label me-2 mb-0">选择插件</label>
+    <select id="pluginSelect" class="form-select" onchange="loadPluginConfig()" style="width: auto; max-width: 200px;"> <!-- 设置最大宽度 -->
+        <option value="">选择插件</option>
+            {% for plugin_name, plugin_info in plugins.items() %}
+            <option value="{{ plugin_name }}">{{ plugin_name }}</option>
+            {% endfor %}
+    </select>
+</div>
+
+    <div id="pluginConfigFields"></div>
+    <div id="configFields">
+        <!-- 原有的配置字段 -->
+    </div>
+    <button type="submit" class="btn btn-primary">保存设置</button>
+</form>
+
+<div id="messageArea" style="display:none;" class="mt-3"></div>
+
+<script>
+function loadPluginConfig() {
+        const pluginName = document.getElementById('pluginSelect').value;
+        const pluginConfigFields = document.getElementById('pluginConfigFields');
+
+        if (!pluginName) {
+            pluginConfigFields.innerHTML = '';
+            return;
+        }
+
+        fetch(`/get_plugin_config/${pluginName}`)
+            .then(response => response.json())
+            .then(config => {
+                let html = '<h3>' + pluginName + ' 插件设置</h3>';
+                for (const [key, value] of Object.entries(config)) {
+                    html += `
+                    <div class="mb-3">
+                        <label for="${pluginName}_${key}" class="form-label">
+                            ${key} (${value.description || ''})
+                        </label>
+                        ${renderInputField(pluginName, key, value)}
+                    </div>
+                    `;
+                }
+                pluginConfigFields.innerHTML = html;
+            })
+            .catch(error => console.error('Error loading plugin config:', error));
+    }
+
+    function renderInputField(pluginName, key, value) {
+        if (Array.isArray(value.value)) {
+            let html = '';
+            value.value.forEach((item, index) => {
+                html += `<input type="text" class="form-control mb-2" name="${pluginName}_${key}[]" value="${item}">`;
+            });
+            html += `<button type="button" class="btn btn-secondary" onclick="addInputField('${pluginName}_${key}')">添加条目</button>`;
+            return html;
+        } else {
+            return `<input type="text" class="form-control" id="${pluginName}_${key}" name="${pluginName}_${key}" value="${value.value}">`;
+        }
+    }
+    // 添加新的输入字段
+    function addInputField(key) {
+        const container = document.querySelector(`[name="${key}[]"]`).parentNode;
+        const inputField = document.createElement('input');
+        inputField.type = 'text';
+        inputField.name = `${key}[]`;
+        inputField.classList.add('form-control', 'mt-2');
+        container.appendChild(inputField);
+    }
+
+document.getElementById('settingsForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const pluginName = document.getElementById('pluginSelect').value;
+
+        const data = {
+            plugin_name: pluginName,
+            config: {}
+        };
+
+        formData.forEach((value, key) => {
+            if (key.startsWith(pluginName + '_')) {
+                const configKey = key.slice(pluginName.length + 1);
+                if (key.endsWith('[]')) {
+                    const baseKey = configKey.slice(0, -2);
+                    if (!data.config[baseKey]) {
+                        data.config[baseKey] = { "value": [] };
+                    }
+                    data.config[baseKey].value.push(value);
+                } else {
+                    data.config[configKey] = { "value": value };
+                }
+            }
+        });
+
+        // 处理原有的配置字段
+        // ... (保留原有的配置字段处理逻辑)
+
+        fetch('/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(result => {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.style.display = 'block';
+            if (result.status === 'success') {
+                messageArea.textContent = 'Settings saved successfully!';
+                messageArea.classList.remove('alert-danger');
+                messageArea.classList.add('alert', 'alert-success');
+            } else {
+                messageArea.textContent = 'Failed to save settings.';
+                messageArea.classList.remove('alert-success');
+                messageArea.classList.add('alert', 'alert-danger');
+            }
+        })
+        .catch(error => {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.style.display = 'block';
+            messageArea.textContent = 'Error occurred while saving settings.';
+            messageArea.classList.remove('alert-success');
+            messageArea.classList.add('alert', 'alert-danger');
+        });
+    });
+</script>
+{% endblock %}

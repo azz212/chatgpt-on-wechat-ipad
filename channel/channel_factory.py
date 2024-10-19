@@ -15,6 +15,12 @@ def create_channel(channel_type) -> Channel:
     if channel_type == "wx":
         from channel.wechat.wechat_channel import WechatChannel
         ch = WechatChannel()
+    elif channel_type == "wx-beta":
+        from channel.wechat.wechat_channel_ipad import WechatChannel
+        ch = WechatChannel()
+    elif channel_type == "wx-hook":
+        from channel.wechat.wechat_channel_hook import WechatChannel
+        ch = WechatChannel()
     elif channel_type == "wxy":
         from channel.wechat.wechaty_channel import WechatyChannel
         ch = WechatyChannel()

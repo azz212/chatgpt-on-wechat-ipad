@@ -1,0 +1,91 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css">
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/sweetalert2/11.12.3/sweetalert2.all.js"></script>
+
+    <style>
+        body {
+            padding-top: 56px; /* 为导航栏留出空间 */
+        }
+        .navbar {
+            margin-bottom: 20px; /* 导航栏与内容之间的间距 */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">微信管理系统</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'accounts' else '' }}" href="/wechat_accounts">微信管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'groups' else '' }}" href="/wechat_group_management">微信群管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'auto_reply' else '' }}" href="/auto_reply">自动回复</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'contacts' else '' }}" href="/contacts">通讯录</a> <!-- 新增通讯录链接 -->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'scheduled_tasks' else '' }}" href="/scheduled_tasks">定时任务</a> <!-- 定时任务链接 -->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'media_messages' else '' }}" href="/media_messages">素材库</a> <!-- 素材库-->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if active == 'settings' else '' }}" href="/settings">设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">退出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category == 'error' and 'danger' or category }}" role="alert" id="flash-message">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Include Bootstrap JavaScript -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 自动关闭闪存消息
+        $(document).ready(function() {
+            const flashMessage = $('#flash-message');
+            if (flashMessage.length) {
+                setTimeout(function() {
+                    flashMessage.fadeOut('slow');
+                }, 1500); // 3秒后自动关闭
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!-- templates/media_messages.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>媒体消息管理</h2>
+
+<!-- 表格：显示所有 Media Messages -->
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Msg Type</th>
+                <th>MD5</th>
+                <th>File Name</th>
+                <th>Uploader Nickname</th>
+                <th>Received Date</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="mediaMessageTableBody">
+            {% for message in media_messages %}
+            <tr>
+                <td>{{ message.id }}</td>
+                <td>{{ message.msg_type }}</td>
+                <td>{{ message.md5 }}</td>
+                <td>{{ message.file_name }}</td>
+                <td>{{ message.uploader_nickname }}</td>
+                <td>{{ message.received_date }}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="editMessage('{{ message.id }}')">编辑</button>
+                    <button class="btn btn-danger" onclick="deleteMessage('{{ message.id }}')">删除</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 新增/修改消息表单 -->
+<form id="mediaMessageForm">
+    <input type="hidden" id="messageId" value="">
+    <div class="form-group">
+        <label for="msgType">Msg Type:</label>
+        <input type="text" id="msgType" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="md5">MD5:</label>
+        <input type="text" id="md5" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="fileName">File Name:</label>
+        <input type="text" id="fileName" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="uploaderNickname">Uploader Nickname:</label>
+        <input type="text" id="uploaderNickname" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="receivedDate">Received Date:</label>
+        <input type="datetime-local" id="receivedDate" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">提交</button>
+</form>
+
+<script>
+// 提交表单：新增或修改
+document.getElementById('mediaMessageForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const messageId = document.getElementById('messageId').value;
+    const data = {
+        msg_type: document.getElementById('msgType').value,
+        md5: document.getElementById('md5').value,
+        file_name: document.getElementById('fileName').value,
+        uploader_nickname: document.getElementById('uploaderNickname').value,
+        received_date: document.getElementById('receivedDate').value
+    };
+
+    // 决定是新增还是修改
+    const url = messageId ? `/media_messages/${messageId}` : '/media_messages';
+    const method = messageId ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            alert('操作成功！');
+            location.reload();
+        } else {
+            alert('操作失败：' + result.message);
+        }
+    });
+});
+
+// 删除消息
+function deleteMessage(messageId) {
+    if (confirm('确定要删除这条消息吗？')) {
+        fetch(`/media_messages/${messageId}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('删除成功！');
+                    location.reload();
+                } else {
+                    alert('删除失败：' + result.message);
+                }
+            });
+    }
+}
+
+// 编辑消息（填充表单数据）
+function editMessage(messageId) {
+    fetch(`/media_messages/${messageId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const message = result.data;
+                document.getElementById('messageId').value = message.id;
+                document.getElementById('msgType').value = message.msg_type;
+                document.getElementById('md5').value = message.md5;
+                document.getElementById('fileName').value = message.file_name;
+                document.getElementById('uploaderNickname').value = message.uploader_nickname;
+                document.getElementById('receivedDate').value = message.received_date;
+            } else {
+                alert('加载消息失败：' + result.message);
+            }
+        });
+}
+</script>
+
+{% endblock %}

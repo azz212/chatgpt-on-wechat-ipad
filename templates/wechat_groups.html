@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>微信群管理</h2>
+
+<!-- 微信号选择下拉框 -->
+<div class="mb-3 d-flex align-items-center">
+    <label for="accountSelect" class="form-label me-2 mb-0">选择微信号</label>
+    <select id="accountSelect" class="form-select" style="width: auto; max-width: 200px;"> <!-- 设置最大宽度 -->
+        <option value="">请选择微信号</option>
+        {% for account in accounts %}
+            <option value="{{ account.id }}">{{ account.account_id }}</option>
+        {% endfor %}
+    </select>
+    <button type="button" class="btn btn-primary mt-0 ms-2" id="loadGroupsButton">加载群组</button> <!-- 将按钮放在同一行 -->
+</div>
+
+<!-- 操作按钮 -->
+<div class="mb-3">
+    <button type="button" class="btn btn-warning" id="initializeBtn">成员</button>
+    <button type="button" class="btn btn-warning" id="refresh-button">刷新</button>
+</div>
+
+<div class="table-responsive">
+    <table id="groups-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>图标</th>
+                <th>名称</th>
+                <th>chatRoomId</th>
+                <th>account_id</th>
+                <th>群主</th>
+                <th>成员数</th>
+                <th>查看成员</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 群组数据将动态插入 -->
+        </tbody>
+    </table>
+    
+</div>
+
+<!-- Members Modal -->
+<div class="modal fade" id="membersModal" tabindex="-1" aria-labelledby="membersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="membersModalLabel">群组成员信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table id="members-table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>头像</th>
+                            <th>wxid</th>
+                            <th>昵称</th>
+                            <th>群昵称</th>
+                            <th>邀请者</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-container">
+                        <!-- Members data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables and AJAX Script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables for members with pagination and search
+        const membersTable = $('#members-table').DataTable({
+            "pageLength": 50,
+            "searching": true,
+            "lengthChange": false
+        });
+
+        // Load groups based on selected account
+        $('#loadGroupsButton').on('click', async function() {
+            const accountId = $('#accountSelect').val();
+            if (!accountId) {
+                alert('请选择一个微信号');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/wechat_groups/${accountId}`);
+                const groupsData = await response.json();
+
+                // Clear existing groups and destroy DataTable instance
+                const groupsTableBody = $('#groups-table tbody');
+                $('#groups-table').DataTable().clear().destroy(); // Clear and destroy previous instance
+                groupsTableBody.empty(); // Clear previous data
+
+                // Check if groupsData is empty
+                if (groupsData.length === 0) {
+                   console.log("没有数据"); // Show empty data message
+                } else {
+                    $('#noGroupsMessage').hide(); // Hide empty data message
+                    // Add new group data
+                    groupsData.forEach(group => {
+                        groupsTableBody.append(`
+                            <tr>
+                                <td><img src="${group.bigHeadImgUrl}" alt="Group Icon" style="width: 40px; height: 40px; object-fit: cover;"></td>
+                                <td>${group.name}</td>
+                                <td>${group.chatRoomId}</td>
+                                <td>${group.account_id}</td>
+                                <td>${group.chatRoomOwner}</td>
+                                <td>${group.members_count}</td>
+                                <td>
+                                    <button class="btn btn-info view-members-button" data-chatroom-id="${group.chatRoomId}">成员</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                // Reinitialize DataTables for groups
+                $('#groups-table').DataTable({
+                    "pageLength": 10,
+                    "searching": true,
+                    "lengthChange": false
+                });
+
+            } catch (error) {
+                console.error('Error fetching groups:', error);
+            }
+        });
+
+        // Use event delegation to handle View Members button click
+        $('#groups-table tbody').on('click', '.view-members-button', async function() {
+            const chatRoomId = $(this).data('chatroom-id');
+            try {
+                const response = await fetch(`/api/wechat_group_members/${chatRoomId}`);
+                const membersData = await response.json();
+
+                // Clear existing members
+                membersTable.clear().draw();
+
+                // Add new member data
+                membersData.forEach(member => {
+                    membersTable.row.add([
+                        `<img src="${member.bigHeadImgUrl}" alt="Avatar" style="width: 20px; height: 20px; object-fit: cover;" class="group-image">`,
+                        member.userName,
+                        member.nickName,
+                        member.displayName,
+                        member.inviterUserName,
+                    ]).draw();
+                });
+
+                // Show modal
+                $('#membersModal').modal('show');
+            } catch (error) {
+                console.error('Error fetching members:', error);
+            }
+        });
+
+        // Handle Refresh button click
+        $('#refresh-button').on('click', function() {
+            location.reload();
+        });
+    });
+</script>
+{% endblock %}

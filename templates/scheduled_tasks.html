@@ -1,0 +1,147 @@
+<!-- templates/scheduled_tasks.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>定时任务管理</h2>
+
+<!-- 表格：显示所有 Scheduled Tasks -->
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Task Description</th>
+                <th>Schedule Type</th>
+                <th>Hour</th>
+                <th>Minute</th>
+                <th>Interval Value</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="taskTableBody">
+            {% for task in scheduled_tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.user_id }}</td>
+                <td>{{ task.task_description }}</td>
+                <td>{{ task.schedule_type }}</td>
+                <td>{{ task.hour }}</td>
+                <td>{{ task.minute }}</td>
+                <td>{{ task.interval_value }}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="editTask('{{ task.id }}')">编辑</button>
+                    <button class="btn btn-danger" onclick="deleteTask('{{ task.id }}')">删除</button>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 新增/修改任务表单 -->
+<form id="scheduledTaskForm">
+    <input type="hidden" id="taskId" value="">
+    <div class="form-group">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="taskDescription">Task Description:</label>
+        <input type="text" id="taskDescription" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="scheduleType">Schedule Type:</label>
+        <input type="text" id="scheduleType" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="hour">Hour:</label>
+        <input type="number" id="hour" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="minute">Minute:</label>
+        <input type="number" id="minute" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="intervalValue">Interval Value:</label>
+        <input type="number" id="intervalValue" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-success">提交</button>
+</form>
+
+<script>
+// 提交表单：新增或修改任务
+document.getElementById('scheduledTaskForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const taskId = document.getElementById('taskId').value;
+    const data = {
+        user_id: document.getElementById('userId').value,
+        task_description: document.getElementById('taskDescription').value,
+        schedule_type: document.getElementById('scheduleType').value,
+        hour: document.getElementById('hour').value,
+        minute: document.getElementById('minute').value,
+        interval_value: document.getElementById('intervalValue').value
+    };
+
+    const url = taskId ? `/scheduled_tasks/${taskId}` : '/scheduled_tasks';
+    const method = taskId ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            alert('操作成功！');
+            location.reload();
+        } else {
+            alert('操作失败：' + result.message);
+        }
+    });
+});
+
+// 删除任务
+function deleteTask(taskId) {
+    if (confirm('确定要删除这个任务吗？')) {
+        fetch(`/scheduled_tasks/${taskId}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('任务删除成功！');
+                    location.reload();
+                } else {
+                    alert('任务删除失败：' + result.message);
+                }
+            });
+    }
+}
+
+// 编辑任务（填充表单数据）
+function editTask(taskId) {
+    fetch(`/scheduled_tasks/${taskId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const task = result.data;
+                document.getElementById('taskId').value = task.id;
+                document.getElementById('userId').value = task.user_id;
+                document.getElementById('taskDescription').value = task.task_description;
+                document.getElementById('scheduleType').value = task.schedule_type;
+                document.getElementById('hour').value = task.hour;
+                document.getElementById('minute').value = task.minute;
+                document.getElementById('intervalValue').value = task.interval_value;
+            } else {
+                alert('加载任务失败：' + result.message);
+            }
+        });
+}
+</script>
+
+
+
+{% endblock %}

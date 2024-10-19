@@ -11,12 +11,14 @@ from channel.channel import Channel
 from common.dequeue import Dequeue
 from common import memory
 from plugins import *
-from channel.wechat.iPadWx import iPadWx
 
 try:
     from voice.audio_convert import any_to_wav
 except Exception as e:
     pass
+channel_name = conf().get("channel_type", "wechat")
+if channel_name == "wechat":
+    from channel.wechat.iPadWx import iPadWx
 
 handler_pool = ThreadPoolExecutor(max_workers=8)  # 处理消息的线程池
 
@@ -34,8 +36,13 @@ class ChatChannel(Channel):
         _thread.setDaemon(True)
         _thread.start()
     def get_user(self,users, username):
+
         # 使用 filter 函数通过给定的 userName 来找寻符合条件的元素
-        res = list(filter(lambda user: user['userName'] == username, users))
+        res = list(filter(lambda user: "userName" in user and user['userName'] == username, users))
+        if res:
+            return res[0]
+
+        res = list(filter(lambda user: "wxid" in user and user['wxid'] == username, users))
 
         return res[0] if res else None  # 如果找到了就返回找到的元素（因为 filter 返回的是列表，所以我们取第一个元素），否则返回 None
     # 根据消息构造context，消息内容相关的触发项写在这里
@@ -76,14 +83,16 @@ class ChatChannel(Channel):
             if context.get("isgroup", False):
                 group_name = cmsg.other_user_nickname
                 group_id = cmsg.other_user_id
-
+                group_name = group_name.replace('"',"")
                 group_name_white_list = config.get("group_name_white_list", [])
+                group_name_white_roomid_list = config.get("group_name_white_roomid_list", {})
                 group_name_keyword_white_list = config.get("group_name_keyword_white_list", [])
                 if any(
                     [
                         group_name in group_name_white_list,
                         "ALL_GROUP" in group_name_white_list,
                         check_contain(group_name, group_name_keyword_white_list),
+                        group_id in group_name_white_roomid_list.keys(),
                     ]
                 ):
                     group_chat_in_one_session = conf().get("group_chat_in_one_session", [])
@@ -110,8 +119,7 @@ class ChatChannel(Channel):
                 logger.debug(f"插件返回BREAK_PASS e_context={e_context}")
                 return context
             # 如果消息来自机器人自己，并且不允许触发自身消息，返回None
-
-            if cmsg.from_user_id == self.user_id and not config.get("trigger_by_self", True):
+            if cmsg.my_msg and not config.get("trigger_by_self", True):
                 logger.debug("[WX]self message skipped")
                 return None
 
@@ -133,7 +141,7 @@ class ChatChannel(Channel):
                         flag = True
                         if match_prefix:
                             content = content.replace(match_prefix, "", 1).strip()
-                    if context["msg"].is_at and self.user_id in context['msg'].at_list : #at 的是机器人，并且是at消息
+                    if context["msg"].is_at:# modify 2024-08-23 and self.user_id in context['msg'].at_list : #at 的是机器人，并且是at消息
                         nick_name = context["msg"].actual_user_nickname
                         if nick_name and nick_name in nick_name_black_list:
                             # 黑名单过滤
@@ -144,26 +152,31 @@ class ChatChannel(Channel):
                         #todo 如果at在最后，则无法匹配昵称
                         if not conf().get("group_at_off", False):
                             flag = True
-                        content = content + " "
-                        pattern = f"@{re.escape(self.name)}(\u2005|\u0020)"
-                        subtract_res = re.sub(pattern, r"", content)
-                        if isinstance(context["msg"].at_list, list):
-                            for at in context["msg"].at_list:
-                                at_info = self.get_user(iPadWx.shared_wx_contact_list[context["msg"].other_user_id]["chatRoomMembers"],at)
-                                nickname = at_info['nickName']
-                                pattern = f"@{re.escape(nickname)}(\u2005|\u0020)"
-                                subtract_res = re.sub(pattern, r"", subtract_res)
 
-                                nickname = at_info['displayName']
-                                pattern = f"@{re.escape(nickname)}(\u2005|\u0020)"
-                                subtract_res = re.sub(pattern, r"", subtract_res)
-                                #如果昵称没去掉，则用替换的方法
-                                if subtract_res == content and context["msg"].self_display_name:
-                                    # 前缀移除后没有变化，使用群昵称再次移除
-                                    #pattern = f"@{re.escape(context['msg'].self_display_name)}(\u2005|\u0020)"
-                                    subtract_res = context['msg'].replace("@"+at_info['nickName'], "").replace("@"+at_info['displayName'], "")
-
-                        content = subtract_res
+                        # content = content + " "
+                        # pattern = f"@{re.escape(self.name)}(\u2005|\u0020)"
+                        # subtract_res = re.sub(pattern, r"", content)
+                        # if isinstance(context["msg"].at_list, list):
+                        #     for at in context["msg"].at_list:
+                        #         #if "chatRoomMembers" in iPadWx.shared_wx_contact_list[context["msg"].other_user_id]:
+                        #         at_info = self.get_user(
+                        #             iPadWx.shared_wx_contact_list[context["msg"].other_user_id]["chatRoomMembers"],
+                        #             at)
+                        #         nickname = at_info['nickName']
+                        #         pattern = f"@{re.escape(nickname)}(\u2005|\u0020)"
+                        #         subtract_res = re.sub(pattern, r"", subtract_res)
+                        #
+                        #
+                        #         nickname = at_info['displayName']
+                        #         pattern = f"@{re.escape(nickname)}(\u2005|\u0020)"
+                        #         subtract_res = re.sub(pattern, r"", subtract_res)
+                        #         #如果昵称没去掉，则用替换的方法
+                        #         if subtract_res == content and context["msg"].self_display_name:
+                        #             # 前缀移除后没有变化，使用群昵称再次移除
+                        #             #pattern = f"@{re.escape(context['msg'].self_display_name)}(\u2005|\u0020)"
+                        #             subtract_res = context['msg'].replace("@"+at_info['nickName'], "").replace("@"+at_info['displayName'], "")
+                        #
+                        # content = subtract_res
                 if not flag:
                     if context["origin_ctype"] == ContextType.VOICE:
                         logger.info("[WX]receive group voice, but checkprefix didn't match")
@@ -238,7 +251,10 @@ class ChatChannel(Channel):
             )
         )
         reply = e_context["reply"]
-        if not e_context.is_pass():
+        AI_reply =  conf().get("AI_reply", False)
+
+        if AI_reply and not e_context.is_pass():
+
             logger.debug("[WX] ready to handle context: type={}, content={}".format(context.type, context.content))
             if context.type  in [ContextType.TEXT ,ContextType.IMAGE_CREATE,ContextType.QUOTE ]:  # 文字和图片消息
                 context["channel"] = e_context["channel"]
@@ -281,8 +297,16 @@ class ChatChannel(Channel):
                 logger.warning("[WX]no plugin handle context type: {}".format(context.type))
                 pass
             elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
+                logger.warning("[WX]no plugin handle context type: {}".format(context.type))
                 pass
             elif context.type == ContextType.LINK :
+                logger.warning("[WX]no plugin handle context type: {}".format(context.type))
+                pass
+            elif context.type == ContextType.EMOJI :
+                logger.warning("[WX]no plugin handle context type: {}".format(context.type))
+                pass
+            elif context.type == ContextType.VIDEO :
+                logger.warning("[WX]no plugin handle context type: {}".format(context.type))
                 pass
             else:
                 logger.warning("[WX] unknown context type: {}".format(context.type))
@@ -338,7 +362,10 @@ class ChatChannel(Channel):
                             reply.ext["prompt"] = reply_text
                 elif reply.type ==ReplyType.LINK:
                     pass
-
+                elif reply.type ==ReplyType.InviteRoom:
+                    pass
+                elif reply.type == ReplyType.IMAGE_XML:
+                    pass
                 else:
                     logger.error("[WX] unknown reply type: {}".format(reply.type))
                     return

@@ -3,13 +3,13 @@
 """
 wechat channel
 """
-
+import datetime
 import io
 
 import time
 
 import requests
-
+import random
 from bridge.context import *
 from bridge.reply import *
 from channel.chat_channel import ChatChannel
@@ -31,25 +31,41 @@ class WechatChannel(ChatChannel):
         self.receivedMsgs = ExpiredDict(60 * 60)
         self.auto_login_times = 0
         self.bot=iPadWx()
+        self.init_load()  # 确保初始化代码在实例创建时执行
 
     def init_load(self):
         '''
         初始化加载
         '''
-        bot_info = {'message': 'success', 'code': 0, 'data': {'robot': 'Cxiaoxin321', 'id': 'wxid_6q3ar4xb7m1922', 'province': '', 'city': '', 'pro_code': '', 'city_code': '', 'status': 1, 'nickname': '帅哥-）', 'expiry_date': '2024-08-26 09:28:49'}, 'request_id': '355c9992-d9d6-435d-b7d8-0b1459278c7d'}
-        #self.bot.get_robot_info()
-        user_info = {'message': 'success', 'code': 0, 'data': {'admin_phone_number': '17612873959', 'admin_name': '周星星', 'push_needed': False, 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '9001', '9002', '9003'], 'whitelisted_group_ids': ['49670972421@chatroom', '26516713149@chatroom'], 'robot_wechat_id': '', 'admin_wechat_id': '', 'callback_url': 'http://www.hdgame.top:5711/chat', 'robot_expiration_date': '2024-08-26 09:28:49', 'last_login': '2024-05-28 00:59:07'}, 'request_id': '4f517052-336e-4526-86e8-4ef057cc0560'}
+        #bot_info = conf().get("bot_info")
+        #user_info = conf().get("user_info")
+        time.sleep(random.randint(0,4))
+        bot_info = self.bot.get_robot_info()
+        if bot_info:
+            if bot_info['code']==9001:
+                time.sleep(random.randint(0, 4))
+                bot_info = self.bot.get_robot_info()
 
-        #self.bot.get_user_info()
+        time.sleep(2)
+        user_info = self.bot.get_user_info()
+        if user_info:
+            if user_info['code']==9001:
+                time.sleep(random.randint(0, 4))
+                bot_info = self.bot.get_user_info()
         # {'message': 'success', 'code': 0, 'data': {'robot': 'Cxiaoxin321', 'id': 'wxid_6q3ar4xb7m1922', 'province': '', 'city': '', 'pro_code': '', 'city_code': '', 'status': 1, 'nickname': '帅哥-）', 'expiry_date': '2024-08-26 09:28:49'}, 'request_id': '355c9992-d9d6-435d-b7d8-0b1459278c7d'}
         # {'message': 'success', 'code': 0, 'data': {'admin_phone_number': '17612873959', 'admin_name': '周星星', 'push_needed': False, 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '9001', '9002', '9003'], 'whitelisted_group_ids': ['49670972421@chatroom', '26516713149@chatroom'], 'robot_wechat_id': '', 'admin_wechat_id': '', 'callback_url': 'http://www.hdgame.top:5711/chat', 'robot_expiration_date': '2024-08-26 09:28:49', 'last_login': '2024-05-28 00:59:07'}, 'request_id': '4f517052-336e-4526-86e8-4ef057cc0560'}
-
+        #{'robot_wechat_id': '', 'admin_wechat_id': '', 'push_needed': True, 'admin_phone_number': '17612873959', 'whitelisted_group_ids': ['46222487326@chatroom', '49725772877@chatroom', '44764019668@chatroom', '51618114532@chatroom', '49839968445@chatroom'], 'admin_name': '周星星', 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '8006', '8007', '8008', '9001', '9002', '9003', '9004', '9005', '9006', '9007', '9008', '7099'], 'callback_url': 'http://www.hdgame.top:5731/chat', 'last_login': '2024-09-01 11:51:06', 'max_group': '10', 'robot_expiration_date': '2024-08-26 09:28:49'}, 'request_id': 'd6a9ffb7-4cf7-4b0a-af42-cfb8206d1d5f'}
+        max_group = int(user_info['data']['max_group'])
+        whitelisted_group_ids = user_info['data']['whitelisted_group_ids']
         self.name = bot_info['data']['nickname']
         self.user_id = bot_info['data']['id']
-        logger.info("Wechat login success, user_id: {}, nickname: {},到期时间{}".format(self.user_id, self.name,
-                                                                                        bot_info['data'][
+        #robot_expiration_date = bot_info['data']['robot_expiration_date']
+        logger.info("Wechat login success, user_id: {}, nickname: {},到期时间{},回调开关{},地址{},监听群{}".format(self.user_id, self.name,
+                    bot_info['data']['expiry_date'],user_info['data']['push_needed'],user_info['data']['callback_url'],whitelisted_group_ids))
+        expiry_date  =bot_info['data']['expiry_date']
+        if expiry_date < datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+            logger.error("机器人到期时间{}!!".format(expiry_date))
 
-                                                                                           'expiry_date']))
         update_group = True
         if update_group:
             groups = self.bot.get_room_list()
@@ -58,7 +74,7 @@ class WechatChannel(ChatChannel):
 
             #如果群还不在本地列表中，加载进来
             need_save=False
-            if groups:
+            if groups['code']==0:
                 for room_id in groups['data']:
                     if room_id not in self.bot.shared_wx_contact_list:
                         logger.info(f"群还未查询过{room_id}")
@@ -68,6 +84,7 @@ class WechatChannel(ChatChannel):
                         iPadWx.shared_wx_contact_list[room_id]['chatRoomMembers'] = members['data']
                         logger.info(f"群还未查询过{room_id},名称{room_info['data']['nickName']}")
                         need_save=True
+                        time.sleep(2)
                     else:
                         pass
                         # room_info = self.bot.get_room_info(room_id)
@@ -85,28 +102,64 @@ class WechatChannel(ChatChannel):
 
 
                 group_need_monitors = []
-                for group_need_monitor in conf().get("group_name_white_list"):
+                group_name_white_list=conf().get("group_name_white_list")
+                for group_need_monitor in group_name_white_list:
                     for key,item in iPadWx.shared_wx_contact_list.items():
-                        if item['nickName'].lower() ==group_need_monitor.lower():
-                            group_need_monitors.append(key)
+                        if item and key.endswith("@chatroom"):
+                            if item['chatRoomId']!="" and item['nickName']!="" :
+                                if item['nickName'].lower() ==group_need_monitor.lower():
+                                    group_need_monitors.append(key)
+                                    if len(group_need_monitors) > max_group:
+                                        logger.info(f"群监控数量超过{max_group}个，退出")
+                                        break
+                                    break
+
+                # 根据ID来监控，防止群名不匹配
+                group_name_white_roomid_list = conf().get("group_name_white_roomid_list",{})
+                for group_id ,group_name in group_name_white_roomid_list.items():
+
+                    if group_id not in group_need_monitors:
+                        if len(group_need_monitors) >= max_group:
+                            logger.info(f"群监控数量超过{max_group}个，退出")
                             break
+                        logger.debug(f"{group_id},{group_name}已加入监控")
+                        group_need_monitors.append(group_id)
+                if "ALL_GROUP" in group_name_white_list:
+                    for room_id in groups['data']:
+                        if room_id not in group_need_monitors and len(group_need_monitors) < max_group:
+                            group_need_monitors.append(room_id)
+                        if len(group_need_monitors)>=max_group:
+                            break
+
                 # for room_id in groups['data']:
                 #     if room_id not in group_need_monitors and len(group_need_monitors)<10:
                 #         group_need_monitors.append(room_id)
 
                 not_monitor = set(groups['data']) - set(group_need_monitors)
+                logger.info(f"当前群{groups['data']}")
+                logger.info(f"需要监控的群{group_need_monitors}")
+                logger.info(f"不需要监控的群{not_monitor}")
                 for room_id in list(not_monitor):
                     logger.info(f"还未监控的群{room_id},群名{iPadWx.shared_wx_contact_list[room_id]['nickName']}")
 
+                for room_id in list(group_need_monitors):
+                    logger.info(f"监控的群{room_id},群名{iPadWx.shared_wx_contact_list[room_id]['nickName']}")
+
+
                 #self.bot.filter_msg()
-                payload = {"group": group_need_monitors}
-                self.bot.group_listen(payload=payload)
+                if group_need_monitors:
+                    payload = {"group": group_need_monitors}
+                    ret = self.bot.group_listen(payload=payload)
+                    logger.info(f"group_listen ret:{ret}")
+                else:
+                    logger.info(f"没有群需要监控{group_need_monitors}")
 
     def startup(self):
+        pass
 
 
-        port = conf().get("wechatipad_port", 5711)
-        self.init_load()
+        #port = conf().get("wechatipad_port", 5711)
+        #self.init_load()
 
         #quart_app.run("0.0.0.0", port, use_reloader=False)
 
@@ -185,10 +238,13 @@ class WechatChannel(ChatChannel):
         elif cmsg.ctype == ContextType.FILE:
             logger.debug(f"[WX]receive attachment msg, file_name={cmsg.content}")
         elif cmsg.ctype == ContextType.XML:
-            logger.debug(f"[WX]receive XML msg")
+            #logger.debug(f"[WX]receive XML msg")
+            logger.debug("[WX]receive XML msg for group: {}".format(cmsg.content))
+
         else:
             logger.debug("[WX]receive msg: {}".format(cmsg.content))
-        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg)
+        reply_at = conf().get("reply_at",False)
+        context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=cmsg.is_group, msg=cmsg,no_need_at= not reply_at)
         if context:
             self.produce(context)
         else:
@@ -223,8 +279,15 @@ class WechatChannel(ChatChannel):
 
     # 统一的发送函数，每个Channel自行实现，根据reply的type字段发送不同类型的消息
     def send(self, reply: Reply, context: Context):
-        def send_long_text(bot, receiver, reply):
+        def send_long_text(bot, context: Context, reply):
+            # 修改回复的方法，根据reply.ext字段判断回复方式
+            # 1 真艾特回复 2 假艾特回复 3 不艾特回复
+            # 4 引用回复不艾特 5 引用回复假艾特 6 引用回复真艾特 无法实现
             max_length = 1000
+            cmsg: ChatMessage = context['msg']
+            refer_name = cmsg.from_user_nickname
+            receiver = context["receiver"]
+            from_user_id = context["msg"].from_user_id
             if reply.type == ReplyType.TEXT:
                 content = reply.content
                 if len(content)>max_length:
@@ -238,18 +301,77 @@ class WechatChannel(ChatChannel):
                             else:
                                 current_message = segment
                         else:
-                            bot.send_message(to_id=receiver, text=current_message)
+                            # bot.send_message(to_id=receiver, text=current_message)
+                            if reply.ext == 1:  # @回复
+                                if "@" not in current_message:
+                                    current_message = "@" + refer_name + "\n" + current_message
+                                bot.send_at_message(to_id=receiver, at_ids=from_user_id, content=current_message)
+                            elif reply.ext == 2:  # 假艾特回复
+                                if "@" not in current_message:
+                                    current_message = "@" + refer_name + "\n" + current_message
+                                bot.send_message(to_id=receiver, text=current_message)
+                            elif reply.ext == 3:  # 不艾特回复
+                                bot.send_message(to_id=receiver, text=current_message)
+                            elif reply.ext == 4:  # 引用回复不艾特
+                                cmsg: ChatMessage = context['msg']
+                                refer_id = cmsg.from_user_id
+                                uuid = cmsg._rawmsg.get("uuid")
+                                refer_name = cmsg.from_user_nickname
+                                bot.send_refer_msg(receiver, uuid, refer_id, refer_name, current_message)
+                            elif reply.ext == 5 or reply.ext == 6:  # 引用回复艾特
+                                if "@" not in current_message:
+                                    current_message = "@" + refer_name + "\n" + current_message
+                                cmsg: ChatMessage = context['msg']
+                                refer_id = cmsg.from_user_id
+                                uuid = cmsg._rawmsg.get("uuid")
+                                refer_name = cmsg.from_user_nickname
+                                bot.send_refer_msg(receiver, uuid, refer_id, refer_name, current_message)
+                            else:
+                                bot.send_message(to_id=receiver, text=current_message)
                             logger.info("[WX] sendMsg={}, receiver={}".format(current_message, receiver))
                             current_message = segment
+                            time.sleep(2.0)
+
                 else:
                     current_message = content
                 if current_message:
-                    bot.send_message(to_id=receiver, text=current_message)
+                    #bot.send_message(to_id=receiver, text=current_message)
+                    if reply.ext == 1:  # @回复
+                        if "@" not in current_message:
+                            current_message = "@" + refer_name + "\n" + current_message
+                        bot.send_at_message(to_id=receiver, at_ids=from_user_id, content=current_message)
+                    elif reply.ext == 2:  # 假艾特回复
+                        if "@" not in current_message:
+                            current_message = "@" + refer_name + "\n" + current_message
+                        bot.send_message(to_id=receiver, text=current_message)
+                    elif reply.ext == 3:  # 不艾特回复
+                        bot.send_message(to_id=receiver, text=current_message)
+                    elif reply.ext == 4 :  # 引用回复不艾特
+                        cmsg: ChatMessage = context['msg']
+                        refer_id = cmsg.from_user_id
+                        uuid = cmsg._rawmsg.get("uuid")
+                        refer_name = cmsg.from_user_nickname
+                        bot.send_refer_msg(receiver, uuid, refer_id, refer_name, current_message)
+                    elif reply.ext == 5 or reply.ext == 6:  # 引用回复艾特
+                        if "@" not in current_message:
+                            current_message = "@" + refer_name + "\n" + current_message
+                        cmsg: ChatMessage = context['msg']
+                        refer_id = cmsg.from_user_id
+                        uuid = cmsg._rawmsg.get("uuid")
+                        refer_name = cmsg.from_user_nickname
+                        bot.send_refer_msg(receiver, uuid, refer_id, refer_name, current_message)
+                    else:
+                        bot.send_message(to_id=receiver, text=current_message)
                     logger.info("[WX] sendMsg={}, receiver={}".format(current_message, receiver))
                     time.sleep(2.0)
         receiver = context["receiver"]
         if reply.type == ReplyType.TEXT:
-            send_long_text(self.bot,receiver,reply)
+            #修改回复的方法，根据reply.ext字段判断回复方式
+            # 1 真艾特回复 2 假艾特回复 3 不艾特回复
+            # 4 引用回复不艾特 5 引用回复假艾特 6 引用回复真艾特 无法实现
+
+            send_long_text(self.bot,context,reply)
+
             #self.bot.send_message(to_id=receiver,text=reply.content)
             #logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
         elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
@@ -285,11 +407,22 @@ class WechatChannel(ChatChannel):
             image_url = self.bot.upload_pic(image_storage, "")['url']
             self.bot.send_pic_msg(to_id=receiver, url=image_url)
             #self.bot.send_image_url(to_id=receiver, url=reply.content)
+        elif reply.type == ReplyType.IMAGE_XML:  # 从文件读取图片
+            image_xml = reply.content
+            logger.info("[WX] forward image, receiver={}".format(receiver))
+
+            self.bot.forward_img(to_id=receiver, xml=image_xml)
+            #self.bot.send_image_url(to_id=receiver, url=reply.content)
         elif reply.type == ReplyType.FILE:  # 新增文件回复类型
             #todo
             file_storage = reply.content
             #itchat.send_file(file_storage, toUserName=receiver)
             logger.info("[WX] sendFile, receiver={}".format(receiver))
+        elif reply.type == ReplyType.FILE_XML:  # 新增文件回复类型
+            #todo
+            file_storage = reply.content
+            #self.bot.forward_file(file_storage, toUserName=receiver)
+            logger.info("[WX] todo sendFile, receiver={}".format(receiver))
         elif reply.type == ReplyType.VIDEO:  # 新增视频回复类型
             #todo
             video_storage = reply.content
@@ -312,7 +445,23 @@ class WechatChannel(ChatChannel):
         elif reply.type == ReplyType.LINK:
             self.bot.forward_video(receiver, reply.content)
             logger.info("[WX] sendCARD={}, receiver={}".format(reply.content, receiver))
+        elif reply.type == ReplyType.InviteRoom:
+            member_list = receiver
+            room_id = reply.content
+            if room_id in self.bot.shared_wx_contact_list:
+                memberCount = self.bot.shared_wx_contact_list[room_id]['memberCount']
+                if memberCount.isdigit() and int(memberCount) < 40:
+                    self.bot.invite_room_direct(room_id, member_list)
+                    logger.info("[WX] less than 40 sendInviteRoom={}, receiver={}".format(reply.content, receiver))
+                else:
+                    self.bot.invite_room_link(room_id, member_list)
+                    logger.info("[WX] more then 40 sendInviteRoom={}, receiver={}".format(reply.content, receiver))
+                if reply.ext:
+                    time.sleep(2)
+                    self.bot.send_message(to_id=receiver, text=reply.ext["prompt"])
 
+            else:
+                logger.error(f"[WX] room_id={room_id} not in shared_wx_contact_list")
         # 统一的发送函数，每个Channel自行实现，根据reply的type字段发送不同类型的消息
 
 #ch = WechatChannel()

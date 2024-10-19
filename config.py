@@ -17,6 +17,9 @@ available_setting = {
     # openai apibase，当use_azure_chatgpt为true时，需要设置对应的api base
     "open_ai_api_base": "https://api.openai.com/v1",
     "open_ai_api_base2": "https://api.openai.com/v1",
+    # depseek配置
+    "deepseek_api_key": "",
+    "deepseek_base_url": "https://api.deepseek.com/v1/chat/completions",
     "proxy": "",  # openai使用的代理
     # chatgpt模型， 当use_azure_chatgpt为true时，其名称为Azure上model deployment名称
     "model": "gpt-3.5-turbo" ,  # qwen-max 支持ChatGPT、Claude、Gemini、文心一言、通义千问、Kimi、讯飞星火、智谱、LinkAI等模型，模型具体名称详见common/const.py文件列出的模型
@@ -34,6 +37,7 @@ available_setting = {
     "group_chat_keyword": [],  # 群聊时包含该关键词则会触发机器人回复
     "group_at_off": False,  # 是否关闭群聊时@bot的触发
     "group_name_white_list": ["ChatGPT测试群", "ChatGPT测试群2"],  # 开启自动回复的群名称列表
+    "group_name_white_roomid_list": {},  # 群ID，如果有这个，就废弃上面的群名称白名单
     "group_name_keyword_white_list": [],  # 开启自动回复的群名称关键词列表
     "group_chat_in_one_session": ["ChatGPT测试群"],  # 支持会话上下文共享的群名称
     "nick_name_black_list": [],  # 用户昵称黑名单
@@ -52,6 +56,7 @@ available_setting = {
     "concurrency_in_session": 1,  # 同一会话最多有多少条消息在处理中，大于1可能乱序
     "image_create_size": "256x256",  # 图片大小,可选有 256x256, 512x512, 1024x1024 (dall-e-3默认为1024x1024)
     "group_chat_exit_group": False, 
+    "group_userid_black_list": ["weixin"],  # 群聊用户ID黑名单
     # chatgpt会话参数
     "expires_in_seconds": 3600,  # 无操作会话的过期时间
     # 人格描述
@@ -71,6 +76,7 @@ available_setting = {
     "baidu_wenxin_model": "eb-instant",  # 默认使用ERNIE-Bot-turbo模型
     "baidu_wenxin_api_key": "",  # Baidu api key
     "baidu_wenxin_secret_key": "",  # Baidu secret key
+    
     # 讯飞星火API
     "xunfei_app_id": "",  # 讯飞应用ID
     "xunfei_api_key": "",  # 讯飞 API key
@@ -90,6 +96,10 @@ available_setting = {
     "dashscope_api_key": "",
     # Google Gemini Api Key
     "gemini_api_key": "",
+    # dify配置
+    "dify_app_type": "chatbot",  # dify助手类型 chatbot(对应聊天助手)/agent(对应Agent)/workflow(对应工作流)，默认为chatbot
+    "dify_convsersation_max_messages": 5,  # dify目前不支持设置历史消息长度，暂时使用超过最大消息数清空会话的策略，缺点是没有滑动窗口，会突然丢失历史消息
+
     # wework的通用配置
     "wework_smart": True,  # 配置wework是否使用已登录的企业微信，False为多开
     # 语音设置
@@ -101,6 +111,11 @@ available_setting = {
     "text_to_voice": "openai",  # 语音合成引擎，支持openai,baidu,google,pytts(offline),azure,elevenlabs,edge(online)
     "text_to_voice_model": "tts-1",
     "tts_voice_id": "alloy",
+    "subscription_key":  "b1c6b6790a56402da7d8cb8a61f0775e",
+    "service_region" : "japaneast",
+    # 单独配置语音识别api
+    "voice_openai_api_key": "",
+    "voice_openai_api_base": "",
     # baidu 语音api配置， 使用百度语音识别和语音合成时需要
     "baidu_app_id": "",
     "baidu_api_key": "",
@@ -110,6 +125,7 @@ available_setting = {
     # azure 语音api配置， 使用azure语音识别和语音合成时需要
     "azure_voice_api_key": "",
     "azure_voice_region": "japaneast",
+    
     # elevenlabs 语音api配置
     "xi_api_key": "",    #获取ap的方法可以参考https://docs.elevenlabs.io/api-reference/quick-start/authentication
     "xi_voice_id": "",   #ElevenLabs提供了9种英式、美式等英语发音id，分别是“Adam/Antoni/Arnold/Bella/Domi/Elli/Josh/Rachel/Sam”
@@ -141,7 +157,8 @@ available_setting = {
     "wechatcomapp_secret": "",  # 企业微信app的secret
     "wechatcomapp_agent_id": "",  # 企业微信app的agent_id
     "wechatcomapp_aes_key": "",  # 企业微信app的aes_key
-
+    "wechatcomapp_access_token": "5dTYTBpBY7g--fIcvebOHCLPAnxmIpjA8bPqZ70w4sN62XY_MIiCovKWA",# 企业微信app的access_token 2小时失效
+    "wechatcomapp_expires_at": 1722360796,
     # 飞书配置
     "feishu_port": 80,  # 飞书bot监听端口
     "feishu_app_id": "",  # 飞书机器人应用APP Id
@@ -177,6 +194,11 @@ available_setting = {
     "linkai_api_key": "",
     "linkai_app_code": "",
     "linkai_api_base": "https://api.link-ai.tech",  # linkAI服务地址
+    "fast_gpt": False,  # 标识模型接口是否是fastgpt
+    "ntchat_smart": True,  # 配置ntchat是否使用已登录微信，False为多开
+    
+    "fastgpt_list": {},  # 配置群聊单一fasgpt知识库
+    
     "Minimax_api_key": "",
     "Minimax_group_id": "",
     "Minimax_base_url": "",
@@ -191,6 +213,19 @@ available_setting = {
     "coze_api_base": "https://api.coze.cn/open_api/v2",
     "coze_api_key": "这里改成你的coze key",
     "coze_bot_id": "这里是你的botid",
+    "base_url_ipad":"",
+    "token_ipad": "",
+    "http_hook_ipad":"",
+    "wechatipadbeta_port":"",
+    "app_id": "",
+    "status": 2,
+    "loginInfo": {"uin": 1791177822, "wxid": "wxid_f3pa5bx7t77z22", "nickName": "Kasper", "mobile": "+48699513626", "alias": "Jasper3959"},
+    "bot_info":None,
+    "user_info":None,
+    "ws_url": "ws://127.0.0.1:5555/websocket",
+    "AI_reply": False,
+    "base_url_ipad_download": "",
+    "reply_at":True,
 }
 
 
@@ -283,7 +318,7 @@ def load_config():
         config_path = "./config-template.json"
 
     config_str = read_file(config_path)
-    logger.debug("[INIT] config str: {}".format(drag_sensitive(config_str)))
+    #logger.debug("[INIT] config str: {}".format(drag_sensitive(config_str)))
 
     # 将json字符串反序列化为dict类型
     config = Config(json.loads(config_str))
@@ -308,9 +343,20 @@ def load_config():
         logger.setLevel(logging.DEBUG)
         logger.debug("[INIT] set log level to DEBUG")
 
-    logger.info("[INIT] load config: {}".format(drag_sensitive(config)))
+    #logger.info("[INIT] load config: {}".format(drag_sensitive(config)))
 
     config.load_user_datas()
+
+
+def save_config():
+    global config
+    config_path = "./config.json"
+    if not os.path.exists(config_path):
+        logger.info("配置文件不存在，将使用config-template.json模板")
+        config_path = "./config-template.json"
+
+    with open(config_path, "w",encoding="utf-8") as f:
+        f.write(json.dumps(config, indent=4,ensure_ascii=False))
 
 
 
