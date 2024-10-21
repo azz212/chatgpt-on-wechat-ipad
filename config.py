@@ -111,7 +111,7 @@ available_setting = {
     "text_to_voice": "openai",  # 语音合成引擎，支持openai,baidu,google,pytts(offline),azure,elevenlabs,edge(online)
     "text_to_voice_model": "tts-1",
     "tts_voice_id": "alloy",
-    "subscription_key":  "b1c6b6790a56402da7d8cb8a61f0775e",
+    "subscription_key":  "",
     "service_region" : "japaneast",
     # 单独配置语音识别api
     "voice_openai_api_key": "",
@@ -157,7 +157,7 @@ available_setting = {
     "wechatcomapp_secret": "",  # 企业微信app的secret
     "wechatcomapp_agent_id": "",  # 企业微信app的agent_id
     "wechatcomapp_aes_key": "",  # 企业微信app的aes_key
-    "wechatcomapp_access_token": "5dTYTBpBY7g--fIcvebOHCLPAnxmIpjA8bPqZ70w4sN62XY_MIiCovKWA",# 企业微信app的access_token 2小时失效
+    "wechatcomapp_access_token": "5dTYTBpBY7g--",# 企业微信app的access_token 2小时失效
     "wechatcomapp_expires_at": 1722360796,
     # 飞书配置
     "feishu_port": 80,  # 飞书bot监听端口
@@ -219,7 +219,7 @@ available_setting = {
     "wechatipadbeta_port":"",
     "app_id": "",
     "status": 2,
-    "loginInfo": {"uin": 1791177822, "wxid": "wxid_f3pa5bx7t77z22", "nickName": "Kasper", "mobile": "+48699513626", "alias": "Jasper3959"},
+    "loginInfo": {"uin": 1791177822, "wxid": "", "nickName": "Kasper", "mobile": "+", "alias": "Jasper3959"},
     "bot_info":None,
     "user_info":None,
     "ws_url": "ws://127.0.0.1:5555/websocket",

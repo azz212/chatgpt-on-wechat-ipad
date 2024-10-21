@@ -32,7 +32,7 @@ max_worker = 5
 ch = None
 wxbot = None
 quart_app.secret_key = 'secret_123'  # 替换为您的秘密密钥
-URL = 'mysql+pymysql://root:adminadmin_asdf@www.hdgame.top:3316/wechat_bot?connect_timeout=60'
+URL = 'mysql+pymysql://'
 quart_app.config['SQLALCHEMY_DATABASE_URI'] = URL
 quart_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 quart_app.config['SQLALCHEMY_POOL_RECYCLE'] = 30
