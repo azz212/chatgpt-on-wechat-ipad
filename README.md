@@ -81,7 +81,7 @@ pip3 install -r requirements-optional.txt
 > 如果某项依赖安装失败可注释掉对应的行再继续
 
 ## 二、配置
-### 方法1
+### 方法1 手动获取token 写到配置中
 配置文件的模板在根目录的`config-template.json`中，需复制该模板创建最终生效的 `config.json` 文件：
 
 ```bash
@@ -90,10 +90,13 @@ pip3 install -r requirements-optional.txt
 
 然后在`config.json`中填入配置，以下是对默认配置的说明，可根据需要进行自定义修改（注意实际使用时请去掉注释，保证JSON格式的完整）：
 
+注意auth_account和auth_password 是开通时得到的用户名和密码
+token 和auth 是文档中第一步common/login接口获取鉴权码得到的token 和auth
+
 ```bash
 # config.json文件内容示例
 {
-  "model": "gpt-3.5-turbo",                                   # 模型名称, 支持 gpt-3.5-turbo, gpt-4, gpt-4-turbo, wenxin, xunfei, glm-4, claude-3-haiku, moonshot
+  "model": "coze",                                   # 模型名称, 支持 gpt-3.5-turbo, gpt-4, gpt-4-turbo, wenxin, xunfei, glm-4, claude-3-haiku, moonshot
   "open_ai_api_key": "YOUR API KEY",                          # 如果使用openAI模型则填入上面创建的 OpenAI API KEY
   "proxy": "",                                                # 代理客户端的ip和端口，国内环境开启代理的需要填写该项，如 "127.0.0.1:7890"
   "single_chat_prefix": ["bot", "@bot"],                      # 私聊时文本需要包含该前缀才能触发机器人回复
@@ -104,11 +107,14 @@ pip3 install -r requirements-optional.txt
   "auth_account": "手机号",
   "auth_password": "加密后的密码",
   "token": "第一步common/login接口获取鉴权码得到的token", 
-  "auth": "第一步common/login接口获取鉴权码得到的auth"
+  "auth": "第一步common/login接口获取鉴权码得到的auth",
+  "http_hook":"http://XXXX:port/chat",                       #本地的回调地址，用于ipda服务器http回调
+  "base_url": ""                                             #远端IPAD服务器地址，用于发送消息等
 }
+
 ```
-### 方法2 用后台的方式添加
-运行后，直接登录后台 http://127.0.0.1:5731
+### 方法2 用网页的方式添加
+运行后，直接登录网页后台 http://127.0.0.1:5731
 
 ![img.png](docs/images/img.png)
 
