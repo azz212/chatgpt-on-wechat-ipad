@@ -113,9 +113,11 @@ async def initialize_user():
             # 尝试执行数据库操作
             db_session.commit()  # 提交事务
             # 尝试保存到配置中,如果用户名一样的话
-            if local_account==account.auth_account:
+            if local_account==account.auth_account or local_account=="":
                 config.__setitem__("token", token)
                 config.__setitem__("auth", auth)
+                config.__setitem__("auth_account", account.auth_account)
+                config.__setitem__("auth_password", account.auth_password)
                 save_config()
 
         except Exception as e:
