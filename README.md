@@ -81,7 +81,7 @@ pip3 install -r requirements-optional.txt
 > 如果某项依赖安装失败可注释掉对应的行再继续
 
 ## 二、配置
-
+### 方法1
 配置文件的模板在根目录的`config-template.json`中，需复制该模板创建最终生效的 `config.json` 文件：
 
 ```bash
@@ -101,19 +101,34 @@ pip3 install -r requirements-optional.txt
   "group_chat_prefix": ["@bot"],                              # 群聊时包含该前缀则会触发机器人回复
   "group_name_white_list": ["ChatGPT测试群", "ChatGPT测试群2"], # 开启自动回复的群名称列表
   "group_chat_in_one_session": ["ChatGPT测试群"],              # 支持会话上下文共享的群名称  
-  "image_create_prefix": ["画", "看", "找"],                   # 开启图片回复的前缀
-  "conversation_max_tokens": 1000,                            # 支持上下文记忆的最多字符数
-  "speech_recognition": false,                                # 是否开启语音识别
-  "group_speech_recognition": false,                          # 是否开启群组语音识别
-  "voice_reply_voice": false,                                 # 是否使用语音回复语音
-  "character_desc": "你是基于大语言模型的AI智能助手，旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。",  # 人格描述
-  # 订阅消息，公众号和企业微信channel中请填写，当被订阅时会自动回复，可使用特殊占位符。目前支持的占位符有{trigger_prefix}，在程序中它会自动替换成bot的触发词。
-  "subscribe_msg": "感谢您的关注！\n这里是ChatGPT，可以自由对话。\n支持语音对话。\n支持图片输出，画字开头的消息将按要求创作图片。\n支持角色扮演和文字冒险等丰富插件。\n输入{trigger_prefix}#help 查看详细指令。",
-  "use_linkai": false,                                        # 是否使用LinkAI接口，默认关闭，开启后可国内访问，使用知识库和MJ
-  "linkai_api_key": "",                                       # LinkAI Api Key
-  "linkai_app_code": ""                                       # LinkAI 应用code
+  "auth_account": "手机号",
+  "auth_password": "加密后的密码",
+  "token": "第一步common/login接口获取鉴权码得到的token", 
+  "auth": "第一步common/login接口获取鉴权码得到的auth"
 }
 ```
+### 方法2 用后台的方式添加
+运行后，直接登录后台 http://127.0.0.1:5731
+
+![img.png](docs/images/img.png)
+
+登录后台，默认账号为admin，密码123456
+
+![img_2.png](docs/images/img_2.png)
+
+点击新增按钮
+
+![img_1.png](docs/images/img_1.png)
+
+输入后获取的用户名（手机号），密码（加密后的密码），省份是微信扫描用的，按照微信所在区域实际填写。回调地址是程序运行地址，有公网的填写外网地址+端口，只有内网的
+使用frp内网穿透，然后填写外网地址+端口。
+
+然后选中输入的账号，先点击初始化，然后再点击扫码，就会出现二维码界面，准备号微信号扫码登录
+
+![img_3.png](docs/images/img_3.png)
+
+扫码完成后，后台可以关闭，程序继续运行。
+
 **配置说明：**
 
 **1.个人聊天**
@@ -143,11 +158,6 @@ pip3 install -r requirements-optional.txt
 + `character_desc` 配置中保存着你对机器人说的一段话，他会记住这段话并作为他的设定，你可以为他定制任何人格      (关于会话上下文的更多内容参考该 [issue](https://github.com/zhayujie/chatgpt-on-wechat/issues/43))
 + `subscribe_msg`：订阅消息，公众号和企业微信channel中请填写，当被订阅时会自动回复， 可使用特殊占位符。目前支持的占位符有{trigger_prefix}，在程序中它会自动替换成bot的触发词。
 
-**5.LinkAI配置 (可选)**
-
-+ `use_linkai`: 是否使用LinkAI接口，开启后可国内访问，使用知识库和 `Midjourney` 绘画, 参考 [文档](https://link-ai.tech/platform/link-app/wechat)
-+ `linkai_api_key`: LinkAI Api Key，可在 [控制台](https://link-ai.tech/console/interface) 创建
-+ `linkai_app_code`: LinkAI 应用code，选填
 
 **本说明文档可能会未及时更新，当前所有可选的配置项均在该[`config.py`](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/config.py)中列出。**
 
