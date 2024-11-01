@@ -49,22 +49,25 @@ class WechatChannel(ChatChannel):
         time.sleep(2)
         user_info = self.bot.get_user_info()
         if user_info:
+            if user_info['code']==5001:
+                logger.error(user_info)
+                return False
             if user_info['code']==9001:
                 time.sleep(random.randint(0, 4))
                 bot_info = self.bot.get_user_info()
-        # {'message': 'success', 'code': 0, 'data': {'robot': 'Cxiaoxin321', 'id': 'wxid_6q3ar4xb7m1922', 'province': '', 'city': '', 'pro_code': '', 'city_code': '', 'status': 1, 'nickname': '帅哥-）', 'expiry_date': '2024-08-26 09:28:49'}, 'request_id': '355c9992-d9d6-435d-b7d8-0b1459278c7d'}
-        # {'message': 'success', 'code': 0, 'data': {'admin_phone_number': '17612873959', 'admin_name': '周星星', 'push_needed': False, 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '9001', '9002', '9003'], 'whitelisted_group_ids': ['49670972421@chatroom', '26516713149@chatroom'], 'robot_wechat_id': '', 'admin_wechat_id': '', 'callback_url': 'http://www.hdgame.top:5711/chat', 'robot_expiration_date': '2024-08-26 09:28:49', 'last_login': '2024-05-28 00:59:07'}, 'request_id': '4f517052-336e-4526-86e8-4ef057cc0560'}
-        #{'robot_wechat_id': '', 'admin_wechat_id': '', 'push_needed': True, 'admin_phone_number': '17612873959', 'whitelisted_group_ids': ['46222487326@chatroom', '49725772877@chatroom', '44764019668@chatroom', '51618114532@chatroom', '49839968445@chatroom'], 'admin_name': '周星星', 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '8006', '8007', '8008', '9001', '9002', '9003', '9004', '9005', '9006', '9007', '9008', '7099'], 'callback_url': 'http://www.hdgame.top:5731/chat', 'last_login': '2024-09-01 11:51:06', 'max_group': '10', 'robot_expiration_date': '2024-08-26 09:28:49'}, 'request_id': 'd6a9ffb7-4cf7-4b0a-af42-cfb8206d1d5f'}
-        max_group = int(user_info['data']['max_group'])
-        whitelisted_group_ids = user_info['data']['whitelisted_group_ids']
-        self.name = bot_info['data']['nickname']
-        self.user_id = bot_info['data']['id']
-        #robot_expiration_date = bot_info['data']['robot_expiration_date']
-        logger.info("Wechat login success, user_id: {}, nickname: {},到期时间{},回调开关{},地址{},监听群{}".format(self.user_id, self.name,
-                    bot_info['data']['expiry_date'],user_info['data']['push_needed'],user_info['data']['callback_url'],whitelisted_group_ids))
-        expiry_date  =bot_info['data']['expiry_date']
-        if expiry_date < datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
-            logger.error("机器人到期时间{}!!".format(expiry_date))
+            # {'message': 'success', 'code': 0, 'data': {'robot': 'Cxiaoxin321', 'id': 'wxid_6q3ar4xb7m1922', 'province': '', 'city': '', 'pro_code': '', 'city_code': '', 'status': 1, 'nickname': '帅哥-）', 'expiry_date': '2024-08-26 09:28:49'}, 'request_id': '355c9992-d9d6-435d-b7d8-0b1459278c7d'}
+            # {'message': 'success', 'code': 0, 'data': {'admin_phone_number': '17612873959', 'admin_name': '周星星', 'push_needed': False, 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '9001', '9002', '9003'], 'whitelisted_group_ids': ['49670972421@chatroom', '26516713149@chatroom'], 'robot_wechat_id': '', 'admin_wechat_id': '', 'callback_url': 'http://www.hdgame.top:5711/chat', 'robot_expiration_date': '2024-08-26 09:28:49', 'last_login': '2024-05-28 00:59:07'}, 'request_id': '4f517052-336e-4526-86e8-4ef057cc0560'}
+            #{'robot_wechat_id': '', 'admin_wechat_id': '', 'push_needed': True, 'admin_phone_number': '17612873959', 'whitelisted_group_ids': ['46222487326@chatroom', '49725772877@chatroom', '44764019668@chatroom', '51618114532@chatroom', '49839968445@chatroom'], 'admin_name': '周星星', 'message_types_to_filter': ['7001', '7005', '8001', '8002', '8003', '8004', '8005', '8006', '8007', '8008', '9001', '9002', '9003', '9004', '9005', '9006', '9007', '9008', '7099'], 'callback_url': 'http://www.hdgame.top:5731/chat', 'last_login': '2024-09-01 11:51:06', 'max_group': '10', 'robot_expiration_date': '2024-08-26 09:28:49'}, 'request_id': 'd6a9ffb7-4cf7-4b0a-af42-cfb8206d1d5f'}
+            max_group = int(user_info['data']['max_group'])
+            whitelisted_group_ids = user_info['data']['whitelisted_group_ids']
+            self.name = bot_info['data']['nickname']
+            self.user_id = bot_info['data']['id']
+            #robot_expiration_date = bot_info['data']['robot_expiration_date']
+            logger.info("Wechat login success, user_id: {}, nickname: {},到期时间{},回调开关{},地址{},监听群{}".format(self.user_id, self.name,
+                        bot_info['data']['expiry_date'],user_info['data']['push_needed'],user_info['data']['callback_url'],whitelisted_group_ids))
+            expiry_date  =bot_info['data']['expiry_date']
+            if expiry_date < datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+                logger.error("机器人到期时间{}!!".format(expiry_date))
 
         update_group = True
         if update_group:

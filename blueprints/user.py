@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from quart import Blueprint, jsonify, request
 from common.log import logger
 from models import Session_sql, User, WeChatAccount, insert_wechat_data
-from config import load_config,conf
+from config import load_config,conf,save_config
 # 创建蓝图对象
 user_bp = Blueprint('user', __name__)
 load_config()
@@ -82,6 +82,7 @@ async def initialize_user():
     account_id = data.get('account_id')
     db_session = Session_sql()
     account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
+
     if account:
         wxbot.auth_account = account.auth_account
         wxbot.auth_password = account.auth_password
@@ -106,9 +107,17 @@ async def initialize_user():
         auth = data.get("auth")
         account.auth = auth
         account.token = token
+        config = conf()
+        local_account = config.get("auth_account")
         try:
             # 尝试执行数据库操作
             db_session.commit()  # 提交事务
+            # 尝试保存到配置中,如果用户名一样的话
+            if local_account==account.auth_account:
+                config.__setitem__("token", token)
+                config.__setitem__("auth", auth)
+                save_config()
+
         except Exception as e:
             db_session.rollback()  # 如果发生异常，回滚事务
             if isinstance(e, PendingRollbackError):
@@ -120,9 +129,9 @@ async def initialize_user():
     result = wxbot.create_user(user_data)
     if result['code'] == 0:
 
-        return jsonify({'status_code': 200, 'success': '初始化成功！'})
+        return jsonify({'status_code': 200, 'message': '初始化成功！'})
     else:
-        return jsonify({'status_code': 500, 'failed': result['message']})
+        return jsonify({'status_code': 500, 'message': result['message']})
     # return redirect(url_for('initialize_user'))  # Adjust this to your main page
 
 
@@ -463,7 +472,7 @@ async def manage_wechat_accounts():
                 raise  # 如果不是PendingRollbackError，再次抛出异常以便上层处理
 
     # Query only accounts belonging to the logged-in user
-    if user.owner_wxid == "wxid_f3pa5bx7t77z22":
+    if user.username == "admin":
         accounts = db_session.query(WeChatAccount).all()
     else:
         accounts = db_session.query(WeChatAccount).filter_by(owner_wxid=user.owner_wxid).all()
