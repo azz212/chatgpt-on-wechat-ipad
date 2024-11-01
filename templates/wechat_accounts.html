@@ -93,23 +93,23 @@
             <div class="modal-body">
                 <form id="addAccountForm">
                     <div class="mb-3">
-                        <label for="auth_account" class="form-label">账号</label>
+                        <label for="auth_account" class="form-label">账号(手机号)</label>
                         <input type="text" class="form-control" id="auth_account" name="auth_account" required>
                     </div>
                     <div class="mb-3">
-                        <label for="auth_password" class="form-label">密码</label>
-                        <input type="password" class="form-control" id="auth_password" name="auth_password" required>
+                        <label for="auth_password" class="form-label">密码(获取的加密后的密码)</label>
+                        <input type="text" class="form-control" id="auth_password" name="auth_password" required>
                     </div>
                     <div class="mb-3">
-                        <label for="province" class="form-label">省份</label>
+                        <label for="province" class="form-label">省份(用于扫码登录)</label>
                         <input type="text" class="form-control" id="province" name="province">
                     </div>
                     <div class="mb-3">
-                        <label for="city" class="form-label">城市</label>
+                        <label for="city" class="form-label">城市(用于扫码登录)</label>
                         <input type="text" class="form-control" id="city" name="city">
                     </div>
                     <div class="mb-3">
-                        <label for="callback_url" class="form-label">回调地址</label>
+                        <label for="callback_url" class="form-label">回调地址(详见接口文档)</label>
                         <input type="text" class="form-control" id="callback_url" name="callback_url">
                     </div>
                 </form>
@@ -293,9 +293,9 @@ function initialize_user(accountId) {
         const messageContent = document.getElementById('messageContent');
 
         if (data.status_code === 200) {
-            messageContent.textContent = "初始化成功";
+            messageContent.textContent = data.message;
         } else {
-            messageContent.textContent = "初始化失败，请确认是否已经初始化";
+            messageContent.textContent = data.message;
 
         }
 
@@ -348,14 +348,14 @@ function startlisten(accountId) {
         messageModal.modal('show');
     });
 }
-function updateRobotInfo(id) {
+function updateRobotInfo(accountId) {
 
     fetch('/update_robot_info', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: id })
+        body: JSON.stringify({  account_id: accountId })
     })
     .then(response => response.json())
     .then(data => {

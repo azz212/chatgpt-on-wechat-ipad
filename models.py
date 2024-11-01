@@ -162,7 +162,6 @@ class ScheduledTasks(Base):
         }
 
 
-
 def insert_wechat_data(json_data, id):
 
     for group_data in json_data.values():

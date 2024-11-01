@@ -202,12 +202,12 @@ available_setting = {
     "Minimax_api_key": "",
     "Minimax_group_id": "",
     "Minimax_base_url": "",
-	"base_url": " ",# ipad 服务器地址
-    "auth_account": "",
-    "auth_password": "",
+	"base_url": " ",# ipad 服务器地址，固定写死，对接文档里面
+    "auth_account": "手机号",
+    "auth_password": "加密后的密码",
 
-    "token": "",
-    "auth": "",
+    "token": "", #第一步common/login接口获取鉴权码得到的token
+    "auth": "",#第一步common/login接口获取鉴权码得到的auth
     "test": 1,
     "http_hook":"http://XXXX:port/chat",#本地的回调地址，用于ipda服务器http回调
     "coze_api_base": "https://api.coze.cn/open_api/v2",
