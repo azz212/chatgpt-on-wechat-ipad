@@ -26,6 +26,7 @@ if channel_name == "wx":
 
 
 @user_bp.route('/login', methods=['GET', 'POST'])
+@user_bp.route('/', methods=['GET', 'POST'])
 
 async def login():
     if request.method == 'POST':

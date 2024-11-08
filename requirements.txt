@@ -24,3 +24,4 @@ pandas
 flask-sqlalchemy
 m3u8
 ffmpeg-python
+apscheduler
