@@ -1,0 +1,35 @@
+{
+
+    "是否发送消息": {
+        "value": false,
+        "description": "被动加好友通过时，是否发送消息"
+    },
+    "主动发送消息": {
+        "value": false,
+        "description": "主动加好友通过时，是否发送消息"
+    },
+    "同意好友延迟时间": {
+        "value": "5",
+        "description": "同意好友延迟时间"
+    },
+    "回复文字": {
+        "value": "您好，我是机器人，请输入关键词，我会尽力回答您的问题。",
+        "description": "回复内容"
+    },
+    "回复图片": {
+        "value": "address_image.xml",
+        "description": "回复图片"
+    },
+    "回复视频": {
+        "value": "navigation_video.xml",
+        "description": "回复视频"
+    },
+    "回复链接": {
+        "value": "address_link.xml",
+        "description": "回复链接"
+    },
+    "回复小程序": {
+        "value": "mini_program.xml",
+        "description": "回复小程序"
+    }
+}

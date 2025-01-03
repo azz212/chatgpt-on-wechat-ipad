@@ -35,16 +35,17 @@ function loadPluginConfig() {
             .then(response => response.json())
             .then(config => {
                 let html = '<h3>' + pluginName + ' 插件设置</h3>';
-                for (const [key, value] of Object.entries(config)) {
+                Object.entries(config).forEach(([key, value]) => {
                     html += `
                     <div class="mb-3">
                         <label for="${pluginName}_${key}" class="form-label">
-                            ${key} (${value.description || ''})
+                            <strong style="color: #3498db;">${value.description || key}</strong>
+                            <strong style="color: #3498db;">(${key})</strong>
                         </label>
                         ${renderInputField(pluginName, key, value)}
                     </div>
                     `;
-                }
+                });
                 pluginConfigFields.innerHTML = html;
             })
             .catch(error => console.error('Error loading plugin config:', error));
@@ -52,83 +53,118 @@ function loadPluginConfig() {
 
     function renderInputField(pluginName, key, value) {
         if (Array.isArray(value.value)) {
-            let html = '';
+            // 创建一个容器div来包含所有输入字段
+            let html = `<div class="array-inputs" id="${pluginName}_${key}_container">`;
+            // 保持数组顺序显示
             value.value.forEach((item, index) => {
-                html += `<input type="text" class="form-control mb-2" name="${pluginName}_${key}[]" value="${item}">`;
+                html += `
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" 
+                               name="${pluginName}_${key}" 
+                               value="${item}" 
+                               data-array-key="${key}">
+                        <button type="button" class="btn btn-danger" 
+                                onclick="removeInputField(this)">删除</button>
+                    </div>`;
             });
-            html += `<button type="button" class="btn btn-secondary" onclick="addInputField('${pluginName}_${key}')">添加条目</button>`;
+            html += `<button type="button" class="btn btn-secondary" 
+                            onclick="addInputField('${pluginName}', '${key}')">添加条目</button>`;
+            html += '</div>';
             return html;
+        } else if (typeof value.value === 'boolean') {
+            return `<select class="form-control" id="${pluginName}_${key}" name="${pluginName}_${key}">
+                <option value="true" ${value.value ? 'selected' : ''}>是</option>
+                <option value="false" ${value.value ? '' : 'selected'}>否</option>
+            </select>`;
         } else {
-            return `<input type="text" class="form-control" id="${pluginName}_${key}" name="${pluginName}_${key}" value="${value.value}">`;
+            return `<input type="text" class="form-control" 
+                           id="${pluginName}_${key}" 
+                           name="${pluginName}_${key}" 
+                           value="${value.value}">`;
         }
     }
-    // 添加新的输入字段
-    function addInputField(key) {
-        const container = document.querySelector(`[name="${key}[]"]`).parentNode;
-        const inputField = document.createElement('input');
-        inputField.type = 'text';
-        inputField.name = `${key}[]`;
-        inputField.classList.add('form-control', 'mt-2');
-        container.appendChild(inputField);
+
+    function addInputField(pluginName, key) {
+        const container = document.getElementById(`${pluginName}_${key}_container`);
+        const newInput = document.createElement('div');
+        newInput.className = 'input-group mb-2';
+        newInput.innerHTML = `
+            <input type="text" class="form-control" 
+                   name="${pluginName}_${key}" 
+                   value="" 
+                   data-array-key="${key}">
+            <button type="button" class="btn btn-danger" 
+                    onclick="removeInputField(this)">删除</button>
+        `;
+        // 在"添加条目"按钮之前插入新的输入框
+        container.insertBefore(newInput, container.lastElementChild);
     }
 
-document.getElementById('settingsForm').addEventListener('submit', function (event) {
+    function removeInputField(button) {
+        button.parentElement.remove();
+    }
+
+    // 修改表单提交处理
+    document.getElementById('settingsForm').addEventListener('submit', function (event) {
         event.preventDefault();
 
-        const form = event.target;
-        const formData = new FormData(form);
         const pluginName = document.getElementById('pluginSelect').value;
-
         const data = {
             plugin_name: pluginName,
             config: {}
         };
 
-        formData.forEach((value, key) => {
-            if (key.startsWith(pluginName + '_')) {
-                const configKey = key.slice(pluginName.length + 1);
-                if (key.endsWith('[]')) {
-                    const baseKey = configKey.slice(0, -2);
-                    if (!data.config[baseKey]) {
-                        data.config[baseKey] = { "value": [] };
-                    }
-                    data.config[baseKey].value.push(value);
-                } else {
-                    data.config[configKey] = { "value": value };
+        // 获取所有配置字段
+        const configFields = document.querySelectorAll('#pluginConfigFields input, #pluginConfigFields select');
+        
+        // 用于临时存储数组类型的值
+        const arrayValues = {};
+
+        configFields.forEach(field => {
+            const arrayKey = field.dataset.arrayKey;
+            if (arrayKey) {
+                // 处理数组类型的字段
+                if (!arrayValues[arrayKey]) {
+                    arrayValues[arrayKey] = [];
                 }
+                if (field.value.trim() !== '') {
+                    arrayValues[arrayKey].push(field.value);
+                }
+            } else {
+                // 处理普通字段
+                const key = field.name.replace(`${pluginName}_`, '');
+                data.config[key] = {
+                    "value": field.value
+                };
             }
         });
 
-        // 处理原有的配置字段
-        // ... (保留原有的配置字段处理逻辑)
+        // 将数组值添加到配置中
+        Object.entries(arrayValues).forEach(([key, values]) => {
+            data.config[key] = {
+                "value": values
+            };
+        });
 
+        // 发送配置到服务器
         fetch('/settings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(result => {
-            const messageArea = document.getElementById('messageArea');
-            messageArea.style.display = 'block';
             if (result.status === 'success') {
-                messageArea.textContent = 'Settings saved successfully!';
-                messageArea.classList.remove('alert-danger');
-                messageArea.classList.add('alert', 'alert-success');
+                alert('保存成功！');
             } else {
-                messageArea.textContent = 'Failed to save settings.';
-                messageArea.classList.remove('alert-success');
-                messageArea.classList.add('alert', 'alert-danger');
+                alert('保存失败！');
             }
         })
         .catch(error => {
-            const messageArea = document.getElementById('messageArea');
-            messageArea.style.display = 'block';
-            messageArea.textContent = 'Error occurred while saving settings.';
-            messageArea.classList.remove('alert-success');
-            messageArea.classList.add('alert', 'alert-danger');
+            console.error('Error:', error);
+            alert('保存失败！');
         });
     });
 </script>

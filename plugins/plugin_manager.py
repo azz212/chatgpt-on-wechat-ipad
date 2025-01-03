@@ -9,7 +9,7 @@ import sys
 from common.log import logger
 from common.singleton import singleton
 from common.sorted_dict import SortedDict
-from config import conf, write_plugin_config
+from config import conf, remove_plugin_config, write_plugin_config
 
 from .event import *
 
@@ -147,10 +147,12 @@ class PluginManager:
                 try:
                     instance = plugincls()
                 except Exception as e:
-                    logger.warn("插件初始化失败！！ %s, diabled. %s" % (name, e))
-                    self.disable_plugin(name)
+                    logger.warn("插件初始化失败！！不要禁用插件 %s, diabled. %s" % (name, e))
+                    #self.disable_plugin(name)
                     failed_plugins.append(name)
                     continue
+                if name in self.instances:
+                    self.instances[name].handlers.clear()
                 self.instances[name] = instance
                 for event in instance.handlers:
                     if event not in self.listening_plugins:
@@ -163,10 +165,13 @@ class PluginManager:
 
     def reload_plugin(self, name: str):
         name = name.upper()
+        remove_plugin_config(name)
         if name in self.instances:
             for event in self.listening_plugins:
                 if name in self.listening_plugins[event]:
                     self.listening_plugins[event].remove(name)
+            if name in self.instances:
+                self.instances[name].handlers.clear()
             del self.instances[name]
             self.activate_plugins()
             return True

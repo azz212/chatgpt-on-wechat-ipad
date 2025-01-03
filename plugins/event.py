@@ -24,6 +24,8 @@ class Event(Enum):
     e_context = {  "channel": 消息channel, "context" : 本次消息的context, "reply" : 目前的回复 }
     """
 
+    ON_CONFIG_CHANGED = 5  # 添加配置变更事件
+
     # AFTER_SEND_REPLY = 5    # 发送回复后
 
 

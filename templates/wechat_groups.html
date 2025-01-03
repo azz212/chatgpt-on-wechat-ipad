@@ -6,39 +6,43 @@
 <!-- 微信号选择下拉框 -->
 <div class="mb-3 d-flex align-items-center">
     <label for="accountSelect" class="form-label me-2 mb-0">选择微信号</label>
-    <select id="accountSelect" class="form-select" style="width: auto; max-width: 200px;"> <!-- 设置最大宽度 -->
+    <select id="accountSelect" class="form-select" style="width: auto; max-width: 200px;">
         <option value="">请选择微信号</option>
         {% for account in accounts %}
             <option value="{{ account.id }}">{{ account.account_id }}</option>
         {% endfor %}
     </select>
-    <button type="button" class="btn btn-primary mt-0 ms-2" id="loadGroupsButton">加载群组</button> <!-- 将按钮放在同一行 -->
+    <button type="button" class="btn btn-primary mt-0 ms-2" id="loadGroupsButton">加载群组</button>
 </div>
 
 <!-- 操作按钮 -->
 <div class="mb-3">
     <button type="button" class="btn btn-warning" id="initializeBtn">成员</button>
     <button type="button" class="btn btn-warning" id="refresh-button">刷新</button>
+    <button type="button" class="btn btn-success" id="saveSelectedGroups">保存监听群</button>
+</div>
+
+<!-- 最大群数限制 -->
+<div class="mb-3">
+    <span id="maxGroupLimit"></span>
 </div>
 
 <div class="table-responsive">
     <table id="groups-table" class="table table-striped">
         <thead>
             <tr>
-                <th>图标</th>
+                <th>选择</th>
                 <th>名称</th>
                 <th>chatRoomId</th>
-                <th>account_id</th>
-                <th>群主</th>
+                <th>备注</th>
                 <th>成员数</th>
-                <th>查看成员</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
             <!-- 群组数据将动态插入 -->
         </tbody>
     </table>
-    
 </div>
 
 <!-- Members Modal -->
@@ -72,21 +76,76 @@
     </div>
 </div>
 
-<!-- DataTables and AJAX Script -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<!-- Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">发送消息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="recipient-info mb-3">
+                    <p><strong>接收人：</strong><span id="recipientNickname"></span></p>
+                    <p><strong>微信ID：</strong><span id="recipientWxid"></span></p>
+                </div>
+                <div class="form-group">
+                    <label for="messageContent">消息内容：</label>
+                    <textarea class="form-control" id="messageContent" rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="sendMessageConfirm">发送</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dataTables.bootstrap5.min.js') }}"></script>
+
 <script>
     $(document).ready(function() {
-        // Initialize DataTables for members with pagination and search
-        const membersTable = $('#members-table').DataTable({
-            "pageLength": 50,
-            "searching": true,
-            "lengthChange": false
-        });
+        let maxSelectableGroups = 0;
+        let selectedGroupIds = [];
+        let dataTable;
+        // 初始化 DataTable
+        function initDataTable(data) {
+            if (dataTable) {
+                dataTable.destroy();
+            }
 
-        // Load groups based on selected account
+            const groupsTableBody = $('#groups-table tbody');
+            groupsTableBody.empty();
+
+            data.groups.forEach(group => {
+                const isChecked = selectedGroupIds.includes(group.chatRoomId) ? 'checked' : '';
+                groupsTableBody.append(`
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="group-select-checkbox"
+                                   data-chatroom-id="${group.chatRoomId}" ${isChecked}>
+                        </td>
+                        <!-- 其他列保持不变 -->
+                    </tr>
+                `);
+            });
+
+            dataTable = $('#groups-table').DataTable({
+                "pageLength": 20,
+                "searching": true,
+                "lengthChange": false
+            });
+        }
+            // 获取所有页面选中的复选框数量
+        function getSelectedCount() {
+            // 使用 DataTable API 获取所有数据，而不仅仅是当前页面
+            return dataTable.$('input.group-select-checkbox:checked').length;
+        }
+        // Load groups when the account is selected
         $('#loadGroupsButton').on('click', async function() {
             const accountId = $('#accountSelect').val();
             if (!accountId) {
@@ -96,39 +155,48 @@
 
             try {
                 const response = await fetch(`/wechat_groups/${accountId}`);
-                const groupsData = await response.json();
+                const data = await response.json();
 
-                // Clear existing groups and destroy DataTable instance
+                maxSelectableGroups = parseInt(data.max_group) || 3;
+                selectedGroupIds = data.whitelisted_group_ids || [];
+                $('#maxGroupLimit').text(`最多可选择 ${maxSelectableGroups} 个群`);
+
+                // 初始化 DataTable
                 const groupsTableBody = $('#groups-table tbody');
-                $('#groups-table').DataTable().clear().destroy(); // Clear and destroy previous instance
-                groupsTableBody.empty(); // Clear previous data
-
-                // Check if groupsData is empty
-                if (groupsData.length === 0) {
-                   console.log("没有数据"); // Show empty data message
-                } else {
-                    $('#noGroupsMessage').hide(); // Hide empty data message
-                    // Add new group data
-                    groupsData.forEach(group => {
-                        groupsTableBody.append(`
-                            <tr>
-                                <td><img src="${group.bigHeadImgUrl}" alt="Group Icon" style="width: 40px; height: 40px; object-fit: cover;"></td>
-                                <td>${group.name}</td>
-                                <td>${group.chatRoomId}</td>
-                                <td>${group.account_id}</td>
-                                <td>${group.chatRoomOwner}</td>
-                                <td>${group.members_count}</td>
-                                <td>
-                                    <button class="btn btn-info view-members-button" data-chatroom-id="${group.chatRoomId}">成员</button>
-                                </td>
-                            </tr>
-                        `);
-                    });
+                if (dataTable) {
+                    dataTable.destroy(); // 如果已存在，先销毁
                 }
+                groupsTableBody.empty();
 
-                // Reinitialize DataTables for groups
-                $('#groups-table').DataTable({
-                    "pageLength": 10,
+                data.groups.forEach(group => {
+                    const isChecked = selectedGroupIds.includes(group.chatRoomId) ? 'checked' : '';
+                    groupsTableBody.append(`
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="group-select-checkbox" data-chatroom-id="${group.chatRoomId}" ${isChecked}>
+                            </td>
+
+                            <td>${group.name}</td>
+                            <td>${group.chatRoomId}</td>
+
+
+                            <td>${group.remark}</td>
+                            <td>${group.members_count}</td>
+                            <td>
+                                <button class="btn btn-info btn-sm send-message" 
+                                        data-chatroom-id="${group.chatRoomId}" 
+                                        data-group-name="${group.name}">发消息</button>
+                                <button class="btn btn-danger btn-sm delete-group" 
+                                        data-chatroom-id="${group.chatRoomId}" 
+                                        data-group-name="${group.name}">删除</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+
+                // 重新初始化 DataTable
+                dataTable = $('#groups-table').DataTable({
+                    "pageLength": 20,
                     "searching": true,
                     "lengthChange": false
                 });
@@ -138,37 +206,168 @@
             }
         });
 
-        // Use event delegation to handle View Members button click
-        $('#groups-table tbody').on('click', '.view-members-button', async function() {
-            const chatRoomId = $(this).data('chatroom-id');
-            try {
-                const response = await fetch(`/api/wechat_group_members/${chatRoomId}`);
-                const membersData = await response.json();
+        // 修改复选框变更事件处理
+        $(document).on('change', '.group-select-checkbox', function() {
+            const selectedCount = getSelectedCount();
+            console.log('Selected count (all pages):', selectedCount);
+            console.log('Max selectable:', maxSelectableGroups);
 
-                // Clear existing members
-                membersTable.clear().draw();
-
-                // Add new member data
-                membersData.forEach(member => {
-                    membersTable.row.add([
-                        `<img src="${member.bigHeadImgUrl}" alt="Avatar" style="width: 20px; height: 20px; object-fit: cover;" class="group-image">`,
-                        member.userName,
-                        member.nickName,
-                        member.displayName,
-                        member.inviterUserName,
-                    ]).draw();
-                });
-
-                // Show modal
-                $('#membersModal').modal('show');
-            } catch (error) {
-                console.error('Error fetching members:', error);
+            if (selectedCount > maxSelectableGroups) {
+                $(this).prop('checked', false);
+                alert(`最多只能选择 ${maxSelectableGroups} 个群组`);
+                return false;
             }
         });
 
-        // Handle Refresh button click
+        // Save selected groups
+        $('#saveSelectedGroups').on('click', async function() {
+            if (!dataTable) {
+                alert('请先加载群组数据');
+                return;
+            }
+
+            const accountId = $('#accountSelect').val();
+            const selectedGroups = dataTable.$('input.group-select-checkbox:checked')
+                .map(function() {
+                    const row = $(this).closest('tr');
+                    return {
+                        chatRoomId: $(this).data('chatroom-id'),
+                        name: row.find('td:eq(1)').text()
+                    };
+                })
+                .toArray();
+
+            // 将数据分离为两个数组
+            const chatRoomIds = selectedGroups.map(group => group.chatRoomId);
+            const groupNames = selectedGroups.map(group => group.name);
+
+            try {
+                const response = await fetch('/save_selected_groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_id: accountId,
+                        selected_group_ids: chatRoomIds,
+                        selected_group_names: groupNames
+                    })
+                });
+
+                if (response.ok) {
+                    alert('监听群组已保存');
+                } else {
+                    alert('保存失败');
+                }
+            } catch (error) {
+                console.error('Error saving groups:', error);
+                alert('保存失败');
+            }
+        });
+
+        // Refresh the page on button click
         $('#refresh-button').on('click', function() {
             location.reload();
+        });
+
+        // Add delete handler
+        $(document).on('click', '.delete-group', async function() {
+            const chatRoomId = $(this).data('chatroom-id');
+            const groupName = $(this).data('group-name');
+            
+            if (!confirm(`确定要删除群组 "${groupName}" 吗？此操作不可恢复。`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/delete_group', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chatRoomId: chatRoomId })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert(result.message);
+                    // Refresh the table
+                    $('#loadGroupsButton').click();
+                } else {
+                    alert('删除失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting group:', error);
+                alert('删除失败');
+            }
+        });
+
+        // 发送消息按钮点击事件
+        $(document).on('click', '.send-message', function() {
+            const chatRoomId = $(this).data('chatroom-id');
+            const groupName = $(this).data('group-name');
+            
+            // 设置接收人信息
+            $('#recipientWxid').text(chatRoomId);
+            $('#recipientNickname').text(groupName);
+            $('#messageContent').val('');
+            $('#messageModal').modal('show');
+        });
+
+        // 确认发送消息
+        $('#sendMessageConfirm').on('click', async function() {
+            const wxid = $('#recipientWxid').text();
+            const message = $('#messageContent').val().trim();
+
+            if (!message) {
+                alert('请输入消息内容');
+                return;
+            }
+
+            try {
+                const response = await fetch('/receive_msg', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        wxid: wxid,
+                        message: message
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('消息发送成功');
+                    $('#messageModal').modal('hide');
+                } else {
+                    alert('发送失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('发送失败');
+            }
+        });
+
+        // 在成员表格中添加选择框列
+        function addCheckboxToMembersTable(members) {
+            const membersContainer = $('#members-container');
+            membersContainer.empty();
+            
+            members.forEach(member => {
+                membersContainer.append(`
+                    <tr>
+                        <td><input type="checkbox" class="member-select-checkbox"></td>
+                        <td><img src="${member.avatar}" alt="avatar" style="width: 50px;"></td>
+                        <td>${member.wxid}</td>
+                        <td>${member.nickname}</td>
+                        <td>${member.group_nickname}</td>
+                        <td>${member.inviter}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        // 确保只能选择一个成员
+        $(document).on('change', '.member-select-checkbox', function() {
+            if ($(this).is(':checked')) {
+                $('.member-select-checkbox').not(this).prop('checked', false);
+            }
         });
     });
 </script>

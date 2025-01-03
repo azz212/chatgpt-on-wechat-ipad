@@ -39,6 +39,8 @@ available_setting = {
     "group_name_white_list": ["ChatGPT测试群", "ChatGPT测试群2"],  # 开启自动回复的群名称列表
     "group_name_white_roomid_list": {},  # 群ID，如果有这个，就废弃上面的群名称白名单
     "group_name_keyword_white_list": [],  # 开启自动回复的群名称关键词列表
+    "private_id_white_list": {},  # 群ID，如果有这个，就废弃上面的群名称白名单
+    "private_name_white_list": [],  # 开启自动回复的群名称关键词列表
     "group_chat_in_one_session": ["ChatGPT测试群"],  # 支持会话上下文共享的群名称
     "nick_name_black_list": [],  # 用户昵称黑名单
     "group_welcome_msg": "",  # 配置新人进群固定欢迎语，不配置则使用随机风格欢迎 
@@ -76,11 +78,13 @@ available_setting = {
     "baidu_wenxin_model": "eb-instant",  # 默认使用ERNIE-Bot-turbo模型
     "baidu_wenxin_api_key": "",  # Baidu api key
     "baidu_wenxin_secret_key": "",  # Baidu secret key
-    
+    "baidu_wenxin_prompt_enabled": False,  # Enable prompt if you are using ernie character model
     # 讯飞星火API
     "xunfei_app_id": "",  # 讯飞应用ID
     "xunfei_api_key": "",  # 讯飞 API key
     "xunfei_api_secret": "",  # 讯飞 API secret
+    "xunfei_domain": "",  # 讯飞模型对应的domain参数，Spark4.0 Ultra为 4.0Ultra，其他模型详见: https://www.xfyun.cn/doc/spark/Web.html
+    "xunfei_spark_url": "",  # 讯飞模型对应的请求地址，Spark4.0 Ultra为 wss://spark-api.xf-yun.com/v4.0/chat，其他模型参考详见: https://www.xfyun.cn/doc/spark/Web.html
     # claude 配置
     "claude_api_cookie": "",
     "claude_uuid": "",
@@ -98,8 +102,7 @@ available_setting = {
     "gemini_api_key": "",
     # dify配置
     "dify_app_type": "chatbot",  # dify助手类型 chatbot(对应聊天助手)/agent(对应Agent)/workflow(对应工作流)，默认为chatbot
-    "dify_convsersation_max_messages": 5,  # dify目前不支持设置历史消息长度，暂时使用超过最大消息数清空会话的策略，缺点是没有滑动窗口，会突然丢失历史消息
-
+    "dify_conversation_max_messages": 5,  # dify目前不支持设置历史消息长度，暂时使用超过最大消息数清空会话的策略，缺点是没有滑动窗口，会突然丢失历史消息
     # wework的通用配置
     "wework_smart": True,  # 配置wework是否使用已登录的企业微信，False为多开
     # 语音设置
@@ -111,7 +114,7 @@ available_setting = {
     "text_to_voice": "openai",  # 语音合成引擎，支持openai,baidu,google,pytts(offline),azure,elevenlabs,edge(online)
     "text_to_voice_model": "tts-1",
     "tts_voice_id": "alloy",
-    "subscription_key":  "",
+    "subscription_key":  "b1c6b6790a56402da7d8cb8a61f0775e",
     "service_region" : "japaneast",
     # 单独配置语音识别api
     "voice_openai_api_key": "",
@@ -157,7 +160,7 @@ available_setting = {
     "wechatcomapp_secret": "",  # 企业微信app的secret
     "wechatcomapp_agent_id": "",  # 企业微信app的agent_id
     "wechatcomapp_aes_key": "",  # 企业微信app的aes_key
-    "wechatcomapp_access_token": "5dTYTBpBY7g--",# 企业微信app的access_token 2小时失效
+    "wechatcomapp_access_token": "5dTYTBpBY7g--fIcvebOHCLPAnxmIpjA8bPqZ70w4sN62XY_MIiCovKWA",# 企业微信app的access_token 2小时失效
     "wechatcomapp_expires_at": 1722360796,
     # 飞书配置
     "feishu_port": 80,  # 飞书bot监听端口
@@ -202,24 +205,30 @@ available_setting = {
     "Minimax_api_key": "",
     "Minimax_group_id": "",
     "Minimax_base_url": "",
-	"base_url": " ",# ipad 服务器地址，固定写死，对接文档里面
-    "auth_account": "手机号",
-    "auth_password": "加密后的密码",
+	"base_url": " ",# ipad 服务器地址
+    "auth_account": "",
+    "auth_password": "",
 
-    "token": "", #第一步common/login接口获取鉴权码得到的token
-    "auth": "",#第一步common/login接口获取鉴权码得到的auth
+    "token": "",
+    "auth": "",
     "test": 1,
     "http_hook":"http://XXXX:port/chat",#本地的回调地址，用于ipda服务器http回调
     "coze_api_base": "https://api.coze.cn/open_api/v2",
     "coze_api_key": "这里改成你的coze key",
     "coze_bot_id": "这里是你的botid",
+
+    #coze auth JWT的授权方式
+    "coze_public_key": "这里改成你的coze public key",
+    "coze_private_key": "这里改成你的coze private key",
+    "coze_client_id": "这里是你的botid",
+    "wx_id":"wxid不是微信号",
     "base_url_ipad":"",
     "token_ipad": "",
     "http_hook_ipad":"",
     "wechatipadbeta_port":"",
     "app_id": "",
     "status": 2,
-    "loginInfo": {"uin": 1791177822, "wxid": "", "nickName": "Kasper", "mobile": "+", "alias": "Jasper3959"},
+    "loginInfo": {"uin": 1791177822, "wxid": "wxid_f3pa5bx7t77z22", "nickName": "Kasper", "mobile": "+48699513626", "alias": "Jasper3959"},
     "bot_info":None,
     "user_info":None,
     "ws_url": "ws://127.0.0.1:5555/websocket",
@@ -401,6 +410,14 @@ def write_plugin_config(pconf: dict):
     for k in pconf:
         plugin_config[k.lower()] = pconf[k]
 
+def remove_plugin_config(name: str):
+    """
+    移除待重新加载的插件全局配置
+    :param name: 待重载的插件名
+    """
+    global plugin_config
+    plugin_config.pop(name.lower(), None)
+
 
 def pconf(plugin_name: str) -> dict:
     """
@@ -412,6 +429,4 @@ def pconf(plugin_name: str) -> dict:
 
 
 # 全局配置，用于存放全局生效的状态
-global_config = {
-    "admin_users": []
-}
+global_config = {"admin_users": []}

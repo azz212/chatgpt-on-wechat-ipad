@@ -5,19 +5,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
 
     <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/sweetalert2/11.12.3/sweetalert2.all.js"></script>
-
-    <style>
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sweetalert.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sweetalert2.all.js') }}"></script>
+        <style>
         body {
             padding-top: 56px; /* 为导航栏留出空间 */
         }
         .navbar {
             margin-bottom: 20px; /* 导航栏与内容之间的间距 */
+        }
+
+        /* 添加表格相关样式 */
+        .sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sortable:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .bg-primary {
+            background: linear-gradient(45deg, #4e73df, #224abe) !important;
+        }
+
+        .table thead th {
+            padding: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e3e6f0;
+        }
+
+        .fa-sort {
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+
+        /* 内容区域样式 */
+        .content {
+            padding: 20px;
+        }
+
+        /* Flash 消息样式 */
+        .alert {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -38,16 +75,7 @@
                         <a class="nav-link {{ 'active' if active == 'groups' else '' }}" href="/wechat_group_management">微信群管理</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if active == 'auto_reply' else '' }}" href="/auto_reply">自动回复</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if active == 'contacts' else '' }}" href="/contacts">通讯录</a> <!-- 新增通讯录链接 -->
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {{ 'active' if active == 'scheduled_tasks' else '' }}" href="/scheduled_tasks">定时任务</a> <!-- 定时任务链接 -->
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if active == 'media_messages' else '' }}" href="/media_messages">素材库</a> <!-- 素材库-->
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if active == 'settings' else '' }}" href="/settings">设置</a>
@@ -75,7 +103,8 @@
     </div>
 
     <!-- Include Bootstrap JavaScript -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
         // 自动关闭闪存消息
         $(document).ready(function() {

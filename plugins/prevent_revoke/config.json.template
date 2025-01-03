@@ -1,0 +1,6 @@
+{
+    "allowed_groups": [
+        "group_id_1",
+        "group_id_2"
+    ]
+} 

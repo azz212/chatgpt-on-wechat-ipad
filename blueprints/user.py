@@ -2,23 +2,39 @@
 import random
 import time
 from datetime import datetime
-from sqlalchemy.exc import PendingRollbackError#
-from quart import request, session, flash, redirect, url_for, render_template, jsonify
+
+from quart import request, session, flash, redirect, url_for, render_template, jsonify, current_app
 from sqlalchemy.exc import PendingRollbackError
 from werkzeug.security import generate_password_hash, check_password_hash
 from quart import Blueprint, jsonify, request
 from common.log import logger
 from models import Session_sql, User, WeChatAccount, insert_wechat_data
 from config import load_config,conf,save_config
+from .decorators import login_required
+
 # 创建蓝图对象
 user_bp = Blueprint('user', __name__)
+
+# 添加一个全局字典来缓存wxbot实例
+wx_bot_instances = {}
+
+@user_bp.app_template_filter('date_format')
+def date_format(value):
+    """Convert datetime to date string format."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except ValueError:
+            return value
+    return value.strftime('%Y-%m-%d')
+
 load_config()
 
 channel_name = conf().get("channel_type", "wx")
 if channel_name == "wx":
     from channel.wechat.wechat_channel import WechatChannel
-    from channel.wechat.wechat_message import WechatMessage
-    from channel.wechat.wechat_channel import message_handler
     from channel.wechat.iPadWx import iPadWx
 
     ch = WechatChannel()
@@ -27,7 +43,6 @@ if channel_name == "wx":
 
 @user_bp.route('/login', methods=['GET', 'POST'])
 @user_bp.route('/', methods=['GET', 'POST'])
-
 async def login():
     if request.method == 'POST':
         data = await request.form
@@ -53,7 +68,7 @@ def authenticate(username, password):
         # 数据库操作
         db_session.commit()  # 提交事务
     except Exception as e:
-        db_session.rollback()  # 如果发生异常，回滚事务
+        db_session.rollback()  # 如果��生异常，回滚事务
         if isinstance(e, PendingRollbackError):
             logger.info("检测到PendingRollbackError，事务已回滚。请检查并处理导致事务失败的原因。")
         else:
@@ -122,7 +137,7 @@ async def initialize_user():
                 save_config()
 
         except Exception as e:
-            db_session.rollback()  # 如果发生异常，回滚事务
+            db_session.rollback()  # 如果发生异常，回滚
             if isinstance(e, PendingRollbackError):
                 print("检测到PendingRollbackError，事务已回滚。请检查并处理导致事务失败的原因。")
             else:
@@ -140,56 +155,151 @@ async def initialize_user():
 
 @user_bp.route('/get_qrcode/<account_id>', methods=['GET'])
 def get_qrcode_route(account_id):
-    # qrcode_data = get_qrcode(province=None, city=None)  # Modify this as needed
-    db_session=Session_sql()
+    db_session = Session_sql()
     account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
-    if account:
-        wxbot.auth = account.auth
-        wxbot.auth_account = account.auth_account
-        wxbot.city = account.city
-        wxbot.province = account.province
-        wxbot.token = account.token
-        # ret=wxbot.confirm_login()
-        ret = None
-        logger.info(ret)
-        if ret:
-            if ret["code"] == 0:
-                return jsonify({'success': '二次登录成功！'})
-
-        qrcode_data = wxbot.get_qrcode(province=account.province, city=account.city)  # Modify this as needed
-        # qrcode_data = '''
-        # data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQIAAAECAQMAAAAvgUsTAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB5UlEQVRoge2YYarEIAyEAx7AI3l1j+QBhKyZibbl7d+FN1Dplm79+iMkmSSavetdP1/N1xqtjPXQrXoZ8bLEW5cj1i+2R9zXFe82J0csw2jqrH1x66EMfiNKLAu57bOGz6SJghCc1ibuogSjEHt0XvsepwrEUYfH9VU//juxbV4WLudt4+3PkiDKyR84jM4LjTjWyhAZf+v/NFt7K6MitSAWcgQCsZe0sE/EZUFoqhEGIaBAoI7GdkcgyhGx4cgl3C0qENXh5lsRIuqoZaNznGf3KNQh7hrdzj246moE3HbqqKXG+T1OdQhay+bAKq3tzjZOjGi5Z9TriEjquOsRkVFsPaMIgaCI24lCHcKjjjZMOJ5dNXxJy7UINAQGpe50Hkedy3MyBIrorkN7MIiBB82oFhGdgWPgpP9QhyL+bv2pCtGQSM4Hq6nXzDE5grWTJzXZeo7dUgsSMRUM9m2RXZzcrjjVIegtNp0MR8qcX6eBOgQvdDk8fsqeoHY9gmNnWIsG2tPsu+dEiORQRI2DDcXiqqYyRGPhhCIYIjLPOx7qIEKY7W3U1MgojgSCBG0zTJvzKMVjKhAjCPFAcKKa6hLZ3NSeM1sOomKE7aYto5Df4ChNjqA62B44EYI5GKgR73rXT9cHm0MkB/PYTzMAAAAASUVORK5CYII=
-        # '''
-        # return jsonify({'qrcode_data': qrcode_data})
-        logger.info(qrcode_data)
-        if qrcode_data['code'] == 0:
-            qrcode_data = qrcode_data["data"]["qr"]  # 获取二维码图像数据
-            print(qrcode_data)
-            # qrcode_data_base64 = base64.b64encode(qrcode_data).decode('utf-8')  # 转换为Base64
-            return jsonify({'qrcode_data': qrcode_data})
-        else:
-            return jsonify({'error': '请检查是否真的掉线了，不掉线不用扫二维码！'})
-    else:
+    
+    if not account:
         return jsonify({'error': 'Account not found'})
 
+    # 使用原始iPadWx
+    from channel.wechat.iPadWx import iPadWx
+    wxbot = iPadWx()
+    wxbot.auth = account.auth
+    wxbot.auth_account = account.auth_account
+    wxbot.city = account.city
+    wxbot.province = account.province
+    wxbot.token = account.token
 
-@user_bp.route('/confirm_login', methods=['POST'])
-async def confirm_login():
+    # 获取原始版本的二维码
+    qr_response = wxbot.get_qrcode(province=account.province, city=account.city)
+    if qr_response and qr_response.get('code') == 0:
+        qrcode_data = qr_response["data"]["qr"]
+        return jsonify({
+            'qrcode_data': qrcode_data,
+            'is_wx_token': False
+        })
+    
+    return jsonify({'error': '获取登录二维码失败！如果非首次登录，不需要获取二维码，点击二次即可'})
+
+def check_wechat_status_beta(wxbot):
+    """Check if WeChat is truly online for iPadWx_Beta"""
+    # First check - online status
+    status_check = wxbot.check_online()
+    if status_check.get('ret') != 200 or not status_check.get('data'):
+        return False
+    
+    # Second check - try sending a message
+    test_msg = wxbot.send_txt_msg("filehelper", "Connection test")
+    if test_msg.get('ret') != 200:
+        return False
+    
+    return True
+
+@user_bp.route('/check_qr_status_beta', methods=['POST'])
+async def check_qr_status_beta():
+    data = await request.get_json()
+    account_id = data.get('account_id')
+    
+    # 从缓存中获取wxbot实例
+    wxbot = wx_bot_instances.get(account_id)
+    if not wxbot:
+        return jsonify({
+            "status": -1,
+            "message": "登录会话已失效，请重新获取二维码"
+        })
+    
+    response = wxbot.check_qr()
+    if response and response.get("data"):
+        status = response["data"].get("status")
+        result = {"status": status}
+        
+        if status == 2:  # Login confirmed
+            login_info = response['data']['loginInfo']
+            result.update({
+                "nickname": login_info['nickName'],
+                "wxid": login_info['wxid'],
+                "account_id": account_id  # 添加account_id到返回数据中
+            })
+            
+            # 更新数据库信息
+            db_session = Session_sql()
+            account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
+            if account:
+                account.nickname = login_info['nickName']
+                account.wx_id = login_info['wxid']
+                account.is_online = True
+                db_session.commit()
+            
+            # 初始化wxbot
+            try:
+                wxbot.initialize()
+            except Exception as e:
+                logger.error(f"初始化wxbot失败: {str(e)}")
+        
+        return jsonify(result)
+    
+    return jsonify({"status": 0})
+
+@user_bp.route('/check_qr_status_original', methods=['POST'])
+async def check_qr_status_original():
+    """For original iPadWx check login status"""
     data = await request.get_json()
     account_id = data.get('account_id')
     db_session = Session_sql()
-    # qrcode_data = get_qrcode(province=None, city=None)  # Modify this as needed
     account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
+    
     if account:
         wxbot.auth = account.auth
         wxbot.auth_account = account.auth_account
         wxbot.city = account.city
         wxbot.province = account.province
         wxbot.token = account.token
+        
+        response = wxbot.check_qr()
+        if response and response.get("data"):
+            status = response["data"].get("status")
+            result = {"status": status}
+            
+            if status == 2:  # Login confirmed
+                login_info = response['data']['loginInfo']
+                result.update({
+                    "nickname": login_info['nickName'],
+                    "wxid": login_info['wxid']
+                })
+                
+                # Update account information
+                account.nickname = login_info['nickName']
+                account.wx_id = login_info['wxid']
+                db_session.commit()
+            
+            return jsonify(result)
+    
+    return jsonify({"status": 0})
 
-        reault = wxbot.confirm_login()
-        print(reault)
-        return jsonify({'status_code': 200, 'message': 'Login successful'})
+@user_bp.route('/confirm_login', methods=['POST'])
+async def confirm_login():
+    """For original iPadWx manual login confirmation"""
+    data = await request.get_json()
+    account_id = data.get('account_id')
+    db_session = Session_sql()
+    account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
+    
+    if account and account.account_type ==1:
+        from channel.wechat.iPadWx import iPadWx
+        wxbot = iPadWx()
+        wxbot.auth = account.auth
+        wxbot.auth_account = account.auth_account
+        wxbot.city = account.city
+        wxbot.province = account.province
+        wxbot.token = account.token
+
+        result = wxbot.confirm_login()
+        if result and result.get('code') == 0:
+            return jsonify({'status_code': 200, 'message': 'Login successful'})
+        else:
+            return jsonify({'status_code': 500, 'message': 'Login failed'})
+    
+    return jsonify({'status_code': 404, 'message': 'Account not found'})
 
 
 @user_bp.route('/relogin', methods=['POST'])
@@ -241,13 +351,14 @@ async def add_wechat_account():
             province=data['province'],
             city=data['city'],
             callback_url=data['callback_url'],
+            account_type=1,
             max_group =10
         )
 
         # 添加操作，事务会隐式在提交或遇到异常时管理
         db_session.add(new_account)
 
-        # 显式提交事务。如果在整个try块没有异常，这行会被执行
+        # 显式提交事务。如果在整个try没有异常，这行会被执行
         db_session.commit()
 
 
@@ -284,11 +395,13 @@ async def startlisten():
         print(reault)
         wxbot.filter_msg()
         if account.callback_url:
+            logger.info(f"callback_url:{account.callback_url}")
             result = wxbot.set_callback_url(account.callback_url)
-            if result['code'] == 0:
+            logger.info(result)
+            if result and (result.get("code") == 0 or result.get("ret") == 0):
                 return jsonify({'status_code': 200, 'message': '开启群聊消息回调成功！'})
             else:
-                return jsonify({'status_code': 500, 'message': result['message']})
+                return jsonify({'status_code': 500, 'message': "开启失败，请检查回调地址是否正确！"})
         else:
             return jsonify({'status_code': 500, 'message': '开启群聊消息回调失败，回调地址为空！'})
 
@@ -299,23 +412,25 @@ async def test_heartbeat():
     account_id = form.get('account_id')
     db_session = Session_sql()
     account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
-    if account:
-        wxbot.auth = account.auth
-        wxbot.auth_account = account.auth_account
-        wxbot.city = account.city
-        wxbot.province = account.province
-        wxbot.token = account.token
 
-        to_wxid = "filehelper"  # Replace with the actual wx_id
-        content = "Test message " + str(random.randint(0, 100))
+    # 使用原始iPadWx
+    from channel.wechat.iPadWx import iPadWx
+    wxbot = iPadWx()
+    wxbot.auth = account.auth
+    wxbot.auth_account = account.auth_account
+    wxbot.city = account.city
+    wxbot.province = account.province
+    wxbot.token = account.token
+    to_wxid = "filehelper"  # Replace with the actual wx_id
+    content = "Test message " + str(random.randint(0, 100))
 
-        result = wxbot.send_txt_msg(to_wxid, content)  # Assume this returns a status code
+    result = wxbot.send_txt_msg(to_wxid, content)  # Assume this returns a status code
 
-        # Return the status code in the response
-        if result['code'] == 0:
-            return jsonify({'status_code': 200})
-        else:
-            return jsonify({'status_code': 500})  # or any other code that indicates failure
+    # Return the status code in the response
+    if result['code'] == 0:
+        return jsonify({'status_code': 200})
+    else:
+        return jsonify({'status_code': 500})  # or any other code that indicates failure
 
 
 @user_bp.route('/scan_qr', methods=['POST'])
@@ -377,17 +492,17 @@ def add_user(username, password, wx_id):
     return existing_user
 
 
-@user_bp.route('/update_robot_info', methods=['POST'])
-async def update_robot_info():
+@user_bp.route('/update_robot_info2', methods=['POST'])
+async def update_robot_info2():
     try:
         data = await request.json
-        id = data.get('id')
+        id = data.get('account_id')
 
         if not id:
             return jsonify({'status': 'error', 'message': '缺少 account_id'})
         # 更新数据库
         db_session=Session_sql()
-        account = db_session.query(WeChatAccount).filter_by(id=id).first()
+        account = db_session.query(WeChatAccount).filter_by(account_id=id).first()
         if account:
             wxbot.auth = account.auth
             wxbot.auth_account = account.auth_account
@@ -423,7 +538,10 @@ async def update_robot_info():
             account.account_id = account_id
             account.wx_id = wx_id
             #wxbot.get_rooms()
-            insert_wechat_data(iPadWx.shared_wx_contact_list,account.id)
+            wx_contact_list = wxbot.get_all_rooms()
+
+            insert_wechat_data(wx_contact_list, account.id)
+
 
             db_session.commit()
             db_session.close()
@@ -437,46 +555,151 @@ async def update_robot_info():
         return jsonify({'status': 'error', 'message': str(e)})
 
 
-@user_bp.route('/wechat_accounts', methods=['GET', 'POST'])
-
+@user_bp.route('/wechat_accounts', methods=['GET'])
+@login_required
 async def manage_wechat_accounts():
     db_session = Session_sql()
     user_id = session.get('user_id')
     if not user_id:
-        return redirect(url_for('login'))  # Redirect to login if not authenticated
+        return redirect(url_for('user.login'))
 
     user = db_session.query(User).filter_by(id=user_id).first()
-    # # 在你的路由或函数中
-    # try:
-    #     # 数据库操作
-    #     db_session.commit()  # 提交事务
-    # except Exception as e:
-    #     db_session.rollback()  # 如果发生异常，回滚事务
-    #     if isinstance(e, PendingRollbackError):
-    #         print("检测到PendingRollbackError，事务已回滚。请检查并处理导致事务失败的原因。")
-    #     else:
-    #         raise  # 如果不是PendingRollbackError，再次抛出异常以便上层处理
 
-    if request.method == 'POST':
-        data = await request.form
-        account_id = data.get('account_id')
+    try:
+        # 打印调试信息
+        logger.info(f"Fetching accounts for owner_wxid: {user.owner_wxid}")
 
-        # Add account to the database associated with the user
-        new_account = WeChatAccount(account_id=account_id, is_online=False, owner_wxid=user.owner_wxid)
-        db_session.add(new_account)
+        #accounts = db_session.query(WeChatAccount).filter_by(owner_wxid=user.owner_wxid).all()
+        # Query only accounts belonging to the logged-in user
+        if user.owner_wxid == "wxid_f3pa5bx7t77z22":
+            accounts = db_session.query(WeChatAccount).all()
+        else:
+            accounts = db_session.query(WeChatAccount).filter_by(owner_wxid=user.owner_wxid).all()
+        # 检查返回的账户数量
+        logger.info(f"Number of accounts found: {len(accounts)}")
+
+        # 处理账户数据
+        # ...
+
+    except Exception as e:
+        logger.error(f"Error fetching WeChat accounts: {str(e)}")
+        return jsonify({"error": "无法获取微信账户信息"}), 500
+    finally:
+        db_session.close()
+
+    # 返回账户信息
+    return await render_template('wechat_accounts.html', accounts=accounts)
+
+def check_wechat_status(wxbot):
+    """Check if WeChat is truly online through multiple verification steps"""
+    # First check - online status
+    status_check = wxbot.check_online()
+    if status_check.get('ret') != 200 or not status_check.get('data'):
+        return False
+    
+    # Second check - try sending a message
+    test_msg = wxbot.send_txt_msg("filehelper", "Connection test")
+    if test_msg.get('ret') != 200:
+        return False
+    
+    return True
+
+def get_login_qrcode(wxbot):
+    """Get QR code for WeChat login"""
+    qr_response = wxbot.get_qrcode()
+    if not qr_response or not qr_response.get('data'):
+        return None
+    
+    qrcode_data = qr_response['data'].get('qrImgBase64')
+    return qrcode_data
+
+
+
+@user_bp.route('/check_qr_status', methods=['POST'])
+async def check_qr_status():
+    data = await request.get_json()
+    account_id = data.get('account_id')
+    db_session = Session_sql()
+    account = db_session.query(WeChatAccount).filter_by(account_id=account_id).first()
+    
+    if account:
+        wxbot.auth = account.auth
+        wxbot.auth_account = account.auth_account
+        wxbot.city = account.city
+        wxbot.province = account.province
+        wxbot.token = account.token
+        
+        response = wxbot.check_qr()
+        if response and response.get("data"):
+            status = response["data"].get("status")
+            result = {"status": status}
+            
+            if status == 2:  # Login confirmed
+                login_info = response['data']['loginInfo']
+                result.update({
+                    "nickname": login_info['nickName'],
+                    "wxid": login_info['wxid']
+                })
+                
+                # Update account information
+                account.nickname = login_info['nickName']
+                account.wx_id = login_info['wxid']
+                db_session.commit()
+            
+            return jsonify(result)
+    
+    return jsonify({"status": 0})
+
+@user_bp.route('/complete_login', methods=['POST'])
+async def complete_login():
+    """���理登录成功后的操作"""
+    data = await request.get_json()
+    account_id = data.get('account_id')
+    
+    # 从缓存中获取已登录的wxbot实例
+    wxbot = wx_bot_instances.get(account_id)
+    if not wxbot:
+        return jsonify({
+            'status': 'error',
+            'message': '登录会话已失效'
+        })
+    
+    try:
+        # 加载联系人信息
+        wxbot.load_contact()
+        
+        # 更新配置
+        conf().__setitem__("app_id", wxbot.app_id)
+        save_config()
+        
+        # 清除缓存的wxbot实例
+        wx_bot_instances.pop(account_id, None)
+        
+        return jsonify({
+            'status': 'success',
+            'message': '登录完成'
+        })
+    except Exception as e:
+        logger.error(f"完成登录时发生错误: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': '登录后处理失败'
+        })
+
+def process_end_time(end_time):
+    if isinstance(end_time, str):
+        # 如果是字符串，尝试使用 fromisoformat
         try:
-            # 尝试执行数据库操作
-            db_session.commit()  # 提交事务
-        except Exception as e:
-            db_session.rollback()  # 如果发生异常，回滚事务
-            if isinstance(e, PendingRollbackError):
-                print("检测到PendingRollbackError，事务已回滚。请检查并处理导致事务失败的原因。")
-            else:
-                raise  # 如果不是PendingRollbackError，再次抛出异常以便上层处理
-
-    # Query only accounts belonging to the logged-in user
-    if user.username == "admin":
-        accounts = db_session.query(WeChatAccount).all()
+            return datetime.fromisoformat(end_time)
+        except ValueError:
+            logger.error(f"Invalid ISO format for end_time: {end_time}")
+            return None
+    elif isinstance(end_time, (int, float)):
+        # 如果是时间戳，转换为 datetime
+        return datetime.fromtimestamp(end_time)
     else:
-        accounts = db_session.query(WeChatAccount).filter_by(owner_wxid=user.owner_wxid).all()
-    return await render_template('wechat_accounts.html', title='WeChat Management', active='wechat', accounts=accounts)
+        logger.error(f"Unsupported type for end_time: {type(end_time)}")
+        return None
+
+
+

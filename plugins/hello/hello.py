@@ -31,32 +31,47 @@ class Hello(Plugin):
             self.config = super().load_config()
             if not self.config:
                 self.config = self._load_config_template()
-            self.group_welc_fixed_msg = self.config.get("group_welc_fixed_msg", {})
-            self.group_welc_prompt = self.config.get("group_welc_prompt", self.group_welc_prompt)
-            self.group_exit_prompt = self.config.get("group_exit_prompt", self.group_exit_prompt)
-            self.patpat_prompt = self.config.get("patpat_prompt", self.patpat_prompt)
-            logger.info("[Hello] inited")
+            # 加载配置项
+            self._load_config()
+            
+            # 注册事件处理器
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
+            # 添加配置变更事件处理器
+            self.handlers[Event.ON_CONFIG_CHANGED] = self.on_config_change
+            
+            logger.info("[Hello] inited")
         except Exception as e:
             logger.error(f"[Hello]初始化异常：{e}")
             raise "[Hello] init failed, ignore "
+
+    def _load_config(self):
+        """加载配置项"""
+        self.group_welc_fixed_msg = self.config.get("单独进群提示")['value']
+        self.group_welc_fixed_group = self.config.get("群名称")['value']
+        self.group_welc_prompt = self.config.get("通用提示")['value']
+        self.group_exit_prompt = self.config.get("退群提示")['value']
+        self.patpat_prompt = self.config.get("拍一拍")['value']
 
     def on_handle_context(self, e_context: EventContext):
         if e_context["context"].type not in [
             ContextType.TEXT,
             ContextType.JOIN_GROUP,
             ContextType.PATPAT,
-            ContextType.EXIT_GROUP
         ]:
             return
         msg: ChatMessage = e_context["context"]["msg"]
         group_name = msg.other_user_nickname #MODIFY THE value
         if e_context["context"].type == ContextType.JOIN_GROUP:
-            if "group_welc_prompt" in conf() or group_name in self.group_welc_fixed_msg:
+            if "group_welc_prompt" in conf() or group_name in self.group_welc_fixed_group:
                 reply = Reply()
                 reply.type = ReplyType.TEXT
-                if group_name in self.group_welc_fixed_msg:
-                    reply.content = self.group_welc_fixed_msg.get(group_name, "").replace("{nickname}",msg.actual_user_nickname)
+                if group_name in self.group_welc_fixed_group:
+                    index = self.group_welc_fixed_group.index(group_name)
+                    content = self.group_welc_fixed_msg[index]
+                    if content:
+                        reply.content = content.replace("{nickname}",msg.actual_user_nickname)
+                    else:
+                        reply.content = conf().get("group_welc_prompt", "").replace("{nickname}",msg.actual_user_nickname)
                 else:
                     reply.content = conf().get("group_welc_prompt", "").replace("{nickname}",msg.actual_user_nickname)
                 e_context["reply"] = reply
@@ -73,17 +88,17 @@ class Hello(Plugin):
                 e_context["context"]["generate_breaked_by"] = EventAction.BREAK_PASS
 
             return
-        
-        if e_context["context"].type == ContextType.EXIT_GROUP:
-            if msg.from_user_id !=msg.other_user_id:
-                if conf().get("group_chat_exit_group"):
-                    e_context["context"].type = ContextType.TEXT
-                    e_context["context"].content = self.group_exit_prompt.format(nickname=msg.actual_user_nickname)
-                    e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
-                    return
-                e_context.action = EventAction.BREAK_PASS
-                return
-            
+        #
+        # if e_context["context"].type == ContextType.EXIT_GROUP:
+        #     if msg.from_user_id !=msg.other_user_id:
+        #         if conf().get("group_chat_exit_group"):
+        #             e_context["context"].type = ContextType.TEXT
+        #             e_context["context"].content = self.group_exit_prompt.format(nickname=msg.actual_user_nickname)
+        #             e_context.action = EventAction.BREAK_PASS  # 事件结束，进入默认处理逻辑
+        #             return
+        #         e_context.action = EventAction.BREAK_PASS
+        #         return
+        #
         if e_context["context"].type == ContextType.PATPAT:
             if '拍了拍我' in msg.content:
 
@@ -136,3 +151,14 @@ class Hello(Plugin):
                     return plugin_conf
         except Exception as e:
             logger.exception(e)
+
+    def on_config_change(self, e_context: EventContext):
+        """处理配置变更事件"""
+        if e_context["plugin_name"] == "Hello":
+            # 重新加载配置
+            self.config = super().load_config()
+            if not self.config:
+                self.config = self._load_config_template()
+            # 更新配置项
+            self._load_config()
+            logger.info("[Hello] config updated.")

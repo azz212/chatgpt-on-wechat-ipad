@@ -10,25 +10,26 @@
 
     <button type="button" class="btn btn-warning" id="initializeBtn">初始</button>
     <button type="button" class="btn btn-secondary" id="showQRCodeBtn">扫码</button>
-    <button type="button" class="btn btn-danger" id="reloginBtn">二次</button>
+    <button type="button" class="btn btn-danger" id="reloginBtn">登录</button>
     <button type="button" class="btn btn-success" id="testBtn">测试</button>
+    <button type="button" class="btn btn-info" id="updateBtnbasic">更新</button>
      <button type="button" class="btn btn-success" id="startListenBtn">开启</button>
-    <button type="button" class="btn btn-info" id="updateBtn">更新</button>
+    <button type="button" class="btn btn-info" id="updateBtn">更新群</button>
 
 
 </div>
 
 <!-- 表格 -->
 <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-striped" id="accountsTable">
+        <thead class="bg-primary text-white">
             <tr>
                 <th>选择</th>
-                <th>WXID</th>
-                <th>账号</th>
-                <th>到期时间</th>
-                <th>昵称</th>
-                <th>城市</th>
+                <th class="sortable" data-sort="account_id">WXID<i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="auth_account">账号<i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="end_time">到期<i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="nickname">昵称<i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="city">城市<i class="fas fa-sort"></i></th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +40,9 @@
                 </td>
                 <td>{{ account.account_id }}</td>
                 <td>{{ account.auth_account }}</td>
-                <td>{{ account.end_time }}</td>
+                <td class="end-time" data-date="{{ account.end_time }}">
+                    {{ account.end_time|date_format }}
+                </td>
                 <td>{{ account.nickname }}</td>
                 <td>{{ account.city }}</td>
             </tr>
@@ -123,6 +126,44 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+    
+    const comparer = (idx, asc) => (a, b) => {
+        const v1 = getCellValue(asc ? a : b, idx);
+        const v2 = getCellValue(asc ? b : a, idx);
+        return v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) 
+            ? v1 - v2 
+            : v1.toString().localeCompare(v2);
+    };
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', (() => {
+            const table = th.closest('table');
+            const tbody = table.querySelector('tbody');
+            Array.from(tbody.querySelectorAll('tr'))
+                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                .forEach(tr => tbody.appendChild(tr));
+        }));
+    });
+
+    const endTimeCells = document.querySelectorAll('td.end-time');
+    endTimeCells.forEach(cell => {
+        const date = new Date(cell.dataset.date);
+        const now = new Date();
+        const oneWeek = new Date();
+        oneWeek.setDate(oneWeek.getDate() + 7);
+
+        if (date < now) {
+            cell.style.backgroundColor = '#ffd700'; // 过期显示黄色
+            cell.style.color = '#000';
+        } else if (date <= oneWeek) {
+            cell.style.backgroundColor = '#ffa500'; // 一周内显示橙色
+            cell.style.color = '#000';
+        }
+    });
+});
+
 // 操作按钮事件
 document.getElementById('startListenBtn').addEventListener('click', function() {
     const selectedAccount = document.querySelector('input[name="selectedAccount"]:checked');
@@ -137,6 +178,14 @@ document.getElementById('updateBtn').addEventListener('click', function() {
     const selectedAccount = document.querySelector('input[name="selectedAccount"]:checked');
     if (selectedAccount) {
         updateRobotInfo(selectedAccount.value);
+    } else {
+        alert('请至少选择一个账号');
+    }
+});
+document.getElementById('updateBtnbasic').addEventListener('click', function() {
+    const selectedAccount = document.querySelector('input[name="selectedAccount"]:checked');
+    if (selectedAccount) {
+        updateRobotbasic(selectedAccount.value);
     } else {
         alert('请至少选择一个账号');
     }
@@ -175,7 +224,6 @@ document.getElementById('testBtn').addEventListener('click', function() {
     }
 });
 function showQRCodeModal(accountId) {
-    // Call the server to get the QR code data using GET method
     fetch(`/get_qrcode/${accountId}`, {
         method: 'GET',
         headers: {
@@ -184,69 +232,47 @@ function showQRCodeModal(accountId) {
     })
     .then(response => response.json())
     .then(data => {
-        // Check if there's an error
-        if (data.success) {
+        if (data.error) {
+            // 获取二维码失败
+            Swal.fire({
+                title: '获取二维码失败',
+                text: data.error,
+                icon: 'error',
+                confirmButtonText: '确认'
+            });
+        } else if (data.success) {
+            // 微信已在线
             Swal.fire({
                 title: '微信登录',
-                text: data.success,  // Display the error message returned by the server
+                text: data.success,
                 icon: 'success',
                 confirmButtonText: '确认'
             });
-        }else if (data.error) {
+        } else if (!data.qrcode_data) {
+            // 没有获取到二维码数据
             Swal.fire({
                 title: '获取二维码失败',
-                text: data.error,  // Display the error message returned by the server
+                text: data.msg,
                 icon: 'error',
                 confirmButtonText: '确认'
             });
         } else {
-            const qrCodeUrl = data.qrcode_data;
-
-            Swal.fire({
-                title: '请扫码登录',
-                text: '请在手机扫码后，选择iPad，点击登录按钮后，再点击本页的【已扫码确认】按钮',
-                imageUrl: `${qrCodeUrl}`, // Assuming the QR code is returned as a base64 image
-                imageWidth: 200,
-                imageHeight: 200,
-                showCancelButton: true,
-                confirmButtonText: '已扫码确认',
-                cancelButtonText: '取消',
-                allowOutsideClick: false,
-                preConfirm: () => {
-                    // Call confirm_login after the user clicks the confirmation button
-                    return fetch(`/confirm_login`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ account_id: accountId })
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.status_code !== 200) {
-                            throw new Error('确认登录失败，请重试');
-                        }
-                    })
-                    .catch(error => {
-                        Swal.showValidationMessage(error.message);
-                    });
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire(
-                        '登录成功!',
-                        '微信已成功登录。',
-                        'success'
-                    ).then(() => {
-                        // Optionally reload the page or update the UI
-                        location.reload();
-                    });
-                }
-            });
+            // 成功获取二维码，根据token类型选择不同的登录方式
+            if (data.is_wx_token) {
+                showAutoCheckQRCode(accountId, data.qrcode_data);
+            } else {
+                showManualCheckQRCode(accountId, data.qrcode_data);
+            }
         }
     })
     .catch(error => {
         console.error("Error:", error);
+        Swal.fire({
+            title: '错误',
+            text: '获取二维码失败，请检查网络连接',
+            icon: 'error',
+            confirmButtonText: '确认'
+        });
     });
 }
 
@@ -303,26 +329,37 @@ function initialize_user(accountId) {
     });
 }
 function relogin(accountId) {
-    fetch(`/relogin`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ account_id: accountId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        const messageModal = $('#messageModal');
-        const messageContent = document.getElementById('messageContent');
+    Swal.fire({
+        title: '弹框登录提示',
+        text: '操作前，请先准备好微信机器人的手机，然后点击【弹框登录】，手机如果弹框，则再手机上点击确认，这样就操作完成。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '弹框登录',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // 原来的登录逻辑
+            fetch(`/relogin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ account_id: accountId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageModal = $('#messageModal');
+                const messageContent = document.getElementById('messageContent');
 
-        if (data.status_code === 200) {
-            messageContent.textContent = data.message;
-        } else {
-            messageContent.textContent = data.message;
+                if (data.status_code === 200) {
+                    messageContent.textContent = data.message;
+                } else {
+                    messageContent.textContent = data.message;
+                }
 
+                messageModal.modal('show');
+            });
         }
-
-        messageModal.modal('show');
     });
 }
 function startlisten(accountId) {
@@ -360,7 +397,31 @@ function updateRobotInfo(accountId) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('机器人信息更新成功！');
+            alert(data.message);
+            // 可以选择刷新页面或更新特定字段
+            location.reload();
+        } else {
+            alert('更新失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('更新过程中发生错误，请查看控制台了解详情。');
+    });
+}
+function updateRobotbasic(accountId) {
+
+    fetch('/update_robot_basic', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({  account_id: accountId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
             // 可以选择刷新页面或更新特定字段
             location.reload();
         } else {
@@ -414,12 +475,268 @@ function addAccount() {
         console.error('Error:', error);
         Swal.fire({
             title: '错误',
-            text: '添加过程中发生错误，请查看控制台了解详情。',
+            text: '添加过程中发生错误请查看控制台了解详情。',
             icon: 'error',
             confirmButtonText: '确定'
         });
     });
 }
 
+function showAutoCheckQRCode(accountId, qrCodeData) {
+    if (!qrCodeData) {
+        Swal.fire({
+            title: '错误',
+            text: '二维码数据无效',
+            icon: 'error',
+            confirmButtonText: '确认'
+        });
+        return;
+    }
+
+    let checkInterval;
+    
+    Swal.fire({
+        title: '请扫码登录',
+        html: `
+            <div class="text-center">
+                <img src="${qrCodeData}"
+                     style="width:200px; height:200px;"
+                     onerror="this.onerror=null; this.src=''; document.getElementById('qrError').style.display='block';">
+                <div id="qrError" style="display:none; color:red; margin-top:10px;">
+                    二维码加载失败，请刷新重试
+                </div>
+                <div id="qrStatus" class="mt-3">等待扫码...</div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '取消',
+        allowOutsideClick: false,
+        didOpen: () => {
+            // 开始定时检查扫码状态
+            checkInterval = setInterval(() => {
+                fetch('/check_qr_status_beta', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ account_id: accountId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('qrStatus');
+                    if (data.status === -1) {
+                        clearInterval(checkInterval);
+                        Swal.close();
+                        Swal.fire({
+                            title: '会话已失效',
+                            text: '请重新获取二维码',
+                            icon: 'warning',
+                            confirmButtonText: '确认'
+                        });
+                    } else if (data.status === 1) {
+                        statusElement.textContent = '二维码已扫描，请在手机上确认登录';
+                        statusElement.style.color = '#28a745';
+                    } else if (data.status === 2) {
+                        clearInterval(checkInterval);
+                        Swal.close();
+                        handleLoginSuccess(data);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error checking QR status:", error);
+                    clearInterval(checkInterval);
+                    Swal.close();
+                    Swal.fire({
+                        title: '错误',
+                        text: '检查扫码状态失败',
+                        icon: 'error',
+                        confirmButtonText: '确认'
+                    });
+                });
+            }, 6000); // 每6秒检查一次
+        },
+        willClose: () => {
+            clearInterval(checkInterval);
+            // 清理登录会话
+            clearLoginSession(accountId);
+        }
+    });
+}
+
+function showManualCheckQRCode(accountId, qrCodeUrl) {
+    Swal.fire({
+        title: '请扫码登录',
+        text: '请使用手机微信扫描二维码登录，扫码完成后点击确认',
+        imageUrl: qrCodeUrl,
+        imageWidth: 200,
+        imageHeight: 200,
+        showCancelButton: true,
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            handleManualLogin(accountId);
+        }
+    });
+}
+
+function checkQRStatus(accountId) {
+    const endpoint = window.isWxToken ? '/check_qr_status_beta' : '/check_qr_status_original';
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ account_id: accountId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 1) {
+            Swal.update({
+                text: '二维码已被扫描，请在手机上确认登录'
+            });
+        } else if (data.status === 2) {
+            Swal.close();
+            Swal.fire({
+                title: '登录成功',
+                text: `欢迎回来，${data.nickname}`,
+                icon: 'success',
+                confirmButtonText: '确认'
+            }).then(() => {
+                location.reload();
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error checking QR status:", error);
+    });
+}
+
+function handleManualLogin(accountId) {
+    fetch('/confirm_login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ account_id: accountId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status_code === 200) {
+            Swal.fire({
+                title: '登录成功',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: '确���'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: '登录失败',
+                text: data.message || '未知错误',
+                icon: 'error',
+                confirmButtonText: '确认'
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        Swal.fire({
+            title: '错误',
+            text: '登录处理失败',
+            icon: 'error',
+            confirmButtonText: '确认'
+        });
+    });
+}
+
+function handleLoginSuccess(data) {
+    Swal.fire({
+        title: '登录成功',
+        text: `欢迎回来，${data.nickname || ''}`,
+        icon: 'success',
+        confirmButtonText: '确认'
+    }).then(() => {
+        // 登录成功后的操作
+        fetch('/initialize_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ account_id: accountId })
+        })
+        .then(response => response.json())
+        .then(initData => {
+            if (initData.status_code === 200) {
+                // 初始化成功，刷新页面
+                location.reload();
+            } else {
+                Swal.fire({
+                    title: '初始化失败',
+                    text: initData.message || '账号初始化失败',
+                    icon: 'warning',
+                    confirmButtonText: '确认'
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error initializing user:", error);
+            Swal.fire({
+                title: '错误',
+                text: '账号初始化失败',
+                icon: 'error',
+                confirmButtonText: '确认'
+            });
+        });
+    });
+}
+
+function clearLoginSession(accountId) {
+    fetch('/clear_login_session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ account_id: accountId })
+    }).catch(error => {
+        console.error("Error clearing login session:", error);
+    });
+}
+
 </script>
+
+<!-- 在 head 部分添加 Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- 添加样式 -->
+<style>
+.sortable {
+    cursor: pointer;
+    position: relative;
+}
+
+.sortable:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bg-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe) !important;
+}
+
+.table thead th {
+    padding: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.fas {
+    margin-left: 5px;
+    font-size: 0.8em;
+}
+</style>
 {% endblock %}
