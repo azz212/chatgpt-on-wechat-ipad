@@ -38,7 +38,7 @@
 
 ![功能图片](docs/images/login.png)
 
-![功能图片](docs/images/account.png)
+![功能图片](docs/images/account.jpg)
 
 ![功能图片](docs/images/group.png)
 
@@ -46,11 +46,11 @@
 
 ![功能图片](docs/images/wechatmanage.png)
 
-![功能图片](docs/images/accept_friends.png)
+![功能图片](docs/images/accept_friends.jpg)
 
-![功能图片](docs/images/revoke.png)
+![功能图片](docs/images/revoke.jpg)
 
-![功能图片](docs/images/welcome.png)
+![功能图片](docs/images/welcome.jpg)
 
 **插件可扩展：**  目前已适配修改大量插件，可定制开发
 
