@@ -1,7 +1,7 @@
 # 简介
 
-> chatgpt-on-wechat-ipad （简称CoW）修改于chatgpt-on-wechat ，底层将itchat替换为ipad协议版本。更安全和更普遍，并魔改很多功能
-> 项目是基于大模型的智能对话机器人，支持微信公众号、企业微信应用、飞书、钉钉接入，可选择GPT3.5/GPT4.0/Claude/Gemini/LinkAI/ChatGLM/KIMI/文心一言/讯飞星火/通义千问/LinkAI，能处理文本、语音和图片，通过插件访问操作系统和互联网等外部资源，支持基于自有知识库定制企业AI应用。
+> chatgpt-on-wechat-ipad （简称CoW）修改于chatgpt-on-wechat ，底层将itchat替换为ipad协议版本。更安全和更普遍，并修改大量功能
+> 项目是基于大模型的智能对话机器人，支持微信公众号、企业微信应用、飞书、钉钉接入，可选择GPT3.5/GPT4.0/Claude/Gemini2.0/LinkAI/ChatGLM/KIMI/文心一言/讯飞星火/通义千问/LinkAI/dify/，能处理文本、语音和图片，通过插件访问操作系统和互联网等外部资源，支持基于自有知识库定制企业AI应用。
 
 最新版本支持的功能如下：
 -  ✅   **具备原COW所有功能并保持更新：** 私聊及群聊的消息智能回复，支持多轮会话上下文记忆，支持 GPT-3.5, GPT-4, GPT-4o, Claude-3, Gemini, 文心一言, 讯飞星火, 通义千问，ChatGLM-4，Kimi(月之暗面)
@@ -57,7 +57,7 @@
 ### 2.运行环境
 
 支持 Linux、MacOS、Windows 系统（可在Linux服务器上长期运行)，同时需安装 `Python`。
-> 建议Python版本在 3.7.1~3.9.X 之间，推荐3.8版本，3.10及以上版本在 MacOS 可用，其他系统上不确定能否正常运行。
+> 建议Python版本3.8-3.10以上，推荐3.10版本在 MacOS，linux，windows可用
 
 
 **(1) 克隆项目代码：**
@@ -104,17 +104,17 @@ token 和auth 是文档中第一步common/login接口获取鉴权码得到的tok
   "group_chat_prefix": ["@bot"],                              # 群聊时包含该前缀则会触发机器人回复
   "group_name_white_list": ["ChatGPT测试群", "ChatGPT测试群2"], # 开启自动回复的群名称列表
   "group_chat_in_one_session": ["ChatGPT测试群"],              # 支持会话上下文共享的群名称  
-  "auth_account": "手机号",
-  "auth_password": "加密后的密码",
+  "auth_account": "开通后的手机号",
+  "auth_password": "开通后加密后的密码，长的那个",
   "token": "第一步common/login接口获取鉴权码得到的token", 
   "auth": "第一步common/login接口获取鉴权码得到的auth",
-  "http_hook":"http://XXXX:port/chat",                       #本地的回调地址，用于ipda服务器http回调
+  "http_hook":"http://XXXX:port/chat",                       #本地的回调地址，用于ipad服务器http回调
   "base_url": ""                                             #远端IPAD服务器地址，用于发送消息等
 }
 
 ```
 ### 方法2 用网页的方式添加
-运行后，直接登录网页后台 http://127.0.0.1:5731
+运行后，直接登录网页后台 http://127.0.0.1:5731/login
 
 ![img.png](docs/images/img.png)
 
@@ -190,5 +190,5 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 
 > **特殊指令：** 用户向机器人发送 **#reset** 即可清空该用户的上下文记忆。
 
-感谢原项目作者，如果itchat可以用的话，不用下载本项目
+感谢原项目作者，尽快弃掉itchat吧！
 
