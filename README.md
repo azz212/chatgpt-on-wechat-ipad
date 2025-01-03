@@ -11,8 +11,15 @@
 -  ✅   **图像能力：** 支持图片生成、图片识别、图生图（如照片修复），可选择 Dall-E-3, stable diffusion, replicate, midjourney, CogView-3, vision模型
 -  ✅   **丰富插件：** 支持个性化插件扩展，敏感词过滤、聊天记录总结、文档总结和对话、联网搜索，看图猜成语，KFC，早报，热榜等非常多的娱乐插件
 
-![kfc](docs/images/KFC.jpg)
-![早报](docs/images/morning.jpg)
+<p>
+ <img src="docs/images/KFC.jpg" width="300px" height="500px" >
+</p>
+
+<p>
+ <img src="docs/images/morning.jpg" width="300px" height="500px" >
+</p>
+
+
 ## 声明
 
 1. 本项目遵循 [MIT开源协议](/LICENSE)，仅用于技术研究和学习，使用本项目时需遵守所在地法律法规、相关政策以及企业章程，禁止用于任何违法或侵犯他人权益的行为
@@ -20,37 +27,57 @@
 3. 本项目主要接入协同办公平台，请使用公众号、企微自建应用、钉钉、飞书等接入通道，其他通道为历史产物，已不再维护
 4. 任何个人、团队和企业，无论以何种方式使用该项目、对何对象提供服务，所产生的一切后果，本项目均不承担任何责任
 
-## 社区
-过期加个微:rongrong3938(人工拉), Cxiaoxin321(机器人自动拉群)
-开源项目交流群：
-![交流群图片](docs/images/contact.jpg)
+## 交流群
+<p align="center">
+  <img src="docs/images/contact.jpg" width="600px" height="800px" alt=" Logo">
+</p>
+<p align="center">
+ 过期加个微:rongrong3938(人工拉), Cxiaoxin321(机器人自动拉群，发加群)
+</p>
+
 
 # 🚀 优点
 **无需Windows 系统：**  无需Windows环境，Linux即可，可云服务器挂机
 
 **成熟稳定：**  Linux可长期挂机使用，不掉线，不封号，一次扫码，长期在线，稳定就是最大的特点。
 
-![功能图片](docs/images/func1.png)
+<p>
+ <img src="docs/images/func1.png" width="600px" height="1020px" >
+</p>
 
-![功能图片](docs/images/func2.png)
+<p>
+ <img src="docs/images/func2.png" width="600px" height="1020px" >
+</p>
 
 **带简单后台维护：** 登录，微信号管理，定时任务，素材管理等，支持手机和电脑登录，自动适配
 
-![功能图片](docs/images/login.png)
 
-![功能图片](docs/images/account.jpg)
+<img src="docs/images/login.png" alt="登录" width="600px">
 
-![功能图片](docs/images/group.png)
 
-![功能图片](docs/images/plugins.png)
+<p>
+ <img src="docs/images/account.jpg" width="600px" height="1020px" >
+</p>
+<p>
+ <img src="docs/images/group.png" width="600px" height="1020px" >
+</p>
 
-![功能图片](docs/images/wechatmanage.png)
 
-![功能图片](docs/images/accept_friends.jpg)
-
-![功能图片](docs/images/revoke.jpg)
-
-![功能图片](docs/images/welcome.jpg)
+<p>
+ <img src="docs/images/plugins.png" width="500px" height="350px" >
+</p>
+<p>
+ <img src="docs/images/wechatmanage.png" width="950px" height="150px" >
+</p>
+<p>
+ <img src="docs/images/accept_friends.jpg" width="600px" height="1020px" >
+</p>
+<p>
+ <img src="docs/images/revoke.jpg" width="600px" height="1020px" >
+</p>
+<p>
+ <img src="docs/images/welcome.jpg" width="600px" height="1020px" >
+</p>
 
 **插件可扩展：**  目前已适配修改大量插件，可定制开发
 
